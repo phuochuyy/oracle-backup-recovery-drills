@@ -20,3 +20,22 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - `RESTORE ARCHIVELOG` has no `FROM TAG`; validate now takes the start time of the latest level 0.
 - Tested the DRILLPDB checksum check both ways (+1 on one balance → FAIL, reverted → PASS) before
   trusting it for the drills.
+
+## Drills on the RAC (branch `drills/region-a`)
+
+- **RMAN-05021** — `CONFIGURE` is not allowed on a standby control file without a catalog. Built a
+  recovery catalog in PDB RCAT on prm3; then the standby's settings must be stored
+  `FOR DB_UNIQUE_NAME orcl_stb` (settings without it only apply to the connected database — first
+  attempt left the standby with compression/parallelism defaults).
+- Found **COMPRESSION ALGORITHM 'MEDIUM'** configured on both RAC databases (Advanced Compression
+  Option) — set to BASIC.
+- **PLS-00201 'DBMS_LOCK'** → RMAN-01005 on every catalog write: 23ai's RECOVERY_CATALOG_OWNER role
+  lacks it; granted EXECUTE ON DBMS_LOCK.
+- **RMAN-06820** — a standby backup with `target /` cannot log in to the primary to archive the current
+  log; use `target sys/...@orcl_stb`.
+- The first standby level 0 "took" 612 s — the level 0 itself took ~1 min; the rest was the
+  `plus archivelog` steps waiting for the primary's current log to arrive.
+- DRILLPDB was only `MOUNTED` on the ADG standby; my verify script said FAIL (no output) — correct.
+  Opened it read only → PASS.
+- Drill 2: a PL/SQL rename block that forgot NOT NULL constraints (ORA-02250), and a versions query
+  by timestamp that found nothing (3 s granularity). Both fixed, both kept in the drill notes.

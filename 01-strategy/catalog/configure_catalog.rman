@@ -1,0 +1,25 @@
+# Run from prm1 (primary orcl) connected to the catalog:
+#   rman target / catalog rco/<pw>@//prm3.rac:1521/rcat.rac cmdfile=\"01-strategy/catalog/configure_catalog.rman\"
+# Settings that differ per database are stored FOR DB_UNIQUE_NAME in the catalog.
+CREATE CATALOG;
+REGISTER DATABASE;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE BACKUP OPTIMIZATION ON;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+# MEDIUM was configured before: it needs the Advanced Compression Option. BASIC is included in EE.
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
+# backups run on the standby (stb1): pieces on its local disk.
+# Settings without FOR DB_UNIQUE_NAME apply only to the connected database (orcl), so the standby
+# needs its own copy of them.
+CONFIGURE BACKUP OPTIMIZATION ON FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE CONTROLFILE AUTOBACKUP ON FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE DB_UNIQUE_NAME 'orcl_stb' CONNECT IDENTIFIER 'orcl_stb';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/u02/backup/orcl/%d_%T_%U' FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u02/backup/orcl/cf_%F' FOR DB_UNIQUE_NAME orcl_stb;
+# with the catalog the primary sees the standby's backups, so both can require "backed up once"
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl_stb;
+SHOW ALL FOR DB_UNIQUE_NAME orcl_stb;

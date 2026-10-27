@@ -21,6 +21,18 @@ First results: [`01-strategy/results`](01-strategy/results/README.md) — level 
 
 Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_drillpdb.sh`](01-strategy/create_drillpdb.sh)); after every drill [`verify_drillpdb.sh`](04-scripts/verify_drillpdb.sh) compares counts and checksums with the known values.
 
+## Drills done
+
+| # | Failure | Where | Recovery | RTO | Data |
+|---|---------|-------|----------|-----|------|
+| 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s | PASS |
+| 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s | PASS |
+| 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s | PASS |
+| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
+
+Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
+(PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
+
 ## Goal
 
 Design a backup strategy for the lab databases and rehearse the failures a DBA must recover from,
