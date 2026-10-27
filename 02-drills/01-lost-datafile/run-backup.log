@@ -1,0 +1,84 @@
+01:56:10 target datafile #40 +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.554.1247795749
+01:56:10 close DRILLPDB and delete the datafile from ASM (the 'failure')
+
+Pluggable database altered.
+
+01:56:12 open DRILLPDB (expect ORA-01157)
+ORA-01157: cannot identify/lock data file 40 - see DBWR trace file
+ORA-01110: data file 40: '+DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.554.1247795749'
+01:56:12 copy the standby's backup pieces of file 40 to prm1
+01:56:13 copied 1 piece(s)
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 01:56:13 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL (DBID=1769932804)
+connected to recovery catalog database
+
+RMAN> catalog start with '/u02/backup/orcl_from_stb/' noprompt;
+starting full resync of recovery catalog
+full resync complete
+searching for all files that match the pattern /u02/backup/orcl_from_stb/
+
+List of Files Unknown to the Database
+=====================================
+File Name: /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+
+
+RMAN> restore datafile 40;
+Starting restore at 28-OCT-26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=350 instance=orcl1 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=76 instance=orcl1 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00040 to +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.554.1247795749
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1 tag=STB_L0
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:07
+Finished restore at 28-OCT-26
+
+
+RMAN> recover datafile 40;
+Starting recover at 28-OCT-26
+starting full resync of recovery catalog
+full resync complete
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+starting media recovery
+
+archived log for thread 1 with sequence 21 is already on disk as file +FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_21.566.1247794951
+archived log for thread 1 with sequence 22 is already on disk as file +FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_22.565.1247795203
+archived log for thread 1 with sequence 23 is already on disk as file +FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_23.564.1247795293
+archived log for thread 1 with sequence 24 is already on disk as file +FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_24.563.1247795543
+recovery status time_needed 2026-10-28 01:41:44
+archived log file name=+FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_21.566.1247794951 thread=1 sequence=21
+recovery status time_needed 2026-10-28 01:42:30
+archived log file name=+FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_22.565.1247795203 thread=1 sequence=22
+recovery status time_needed 2026-10-28 01:46:42
+archived log file name=+FRA/ORCL/ARCHIVELOG/2026_10_28/thread_1_seq_23.564.1247795293 thread=1 sequence=23
+media recovery complete, elapsed time: 00:00:01
+Finished recover at 28-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+01:56:27 open DRILLPDB again
+
+Pluggable database altered.
+
+01:56:29 verify: PASS (5 tables, counts and checksums match)
+01:56:29 RTO 17 s (method backup)
