@@ -1,7 +1,25 @@
 # Oracle Backup & Recovery Drills — RMAN · Flashback · measured RTO
 
-> Status: **planned**. A backup is only proven by a restore: each drill records the steps run,
-> the time to recover, and the data verified afterwards.
+> Status: **in progress** — backup strategy done on orcl3 (single instance); drills next, on the
+> RAC cluster (Region A) and on a throw-away CDB for the destructive ones.
+> A backup is only proven by a restore: each drill records the steps run, the time to recover, and
+> the data verified afterwards.
+
+## Backup strategy (orcl3) — done
+
+| Item | Setting |
+|------|---------|
+| Retention | recovery window of 7 days |
+| Backups | level 0 weekly, level 1 daily, archived logs every 30 min (systemd timers, [`01-strategy/systemd`](01-strategy/systemd)) |
+| Format | compressed backupsets, `BASIC` algorithm (EE; LOW/MEDIUM/HIGH need Advanced Compression), 2 channels |
+| Location | `/u02/backup` on a different virtual disk than the datafiles |
+| Block change tracking | enabled — level 1 read 0.1 % of blocks |
+| Archived log deletion | applied on the standby **and** backed up once ([why](notes/worklog.md)) |
+| Proof | `RESTORE DATABASE VALIDATE` + archived logs since level 0, no errors |
+
+First results: [`01-strategy/results`](01-strategy/results/README.md) — level 0 111 s → 2.3 GB, level 1 10 s.
+
+Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_drillpdb.sh`](01-strategy/create_drillpdb.sh)); after every drill [`verify_drillpdb.sh`](04-scripts/verify_drillpdb.sh) compares counts and checksums with the known values.
 
 ## Goal
 

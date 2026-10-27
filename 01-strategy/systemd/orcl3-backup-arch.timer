@@ -1,0 +1,10 @@
+[Unit]
+Description=orcl3 backup: archived logs every 30 minutes
+
+[Timer]
+OnCalendar=*:00/30
+Persistent=true
+Unit=orcl3-backup@arch.service
+
+[Install]
+WantedBy=timers.target
