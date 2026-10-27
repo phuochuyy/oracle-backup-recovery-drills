@@ -1,0 +1,20 @@
+# RMAN configuration for orcl3 (run once: rman target / cmdfile=\"01-strategy/configure.rman\")
+# The path must be quoted: unquoted, RMAN parses the leading "01" as an integer (RMAN-01009),
+# both with @file and with cmdfile=file.
+# /u02/backup is on the root disk (vda), not on the datafile disk (vdb): losing one disk must not
+# lose both the datafiles and their backups. Created by root, owned by oracle.
+# - recovery window instead of redundancy: "can I restore to any point of the last 7 days?"
+# - BASIC compression is included in Enterprise Edition; LOW/MEDIUM/HIGH need the Advanced Compression Option
+# - backups go to /u02/backup (outside the FRA, which already holds redo, archived and flashback logs)
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE BACKUP OPTIMIZATION ON;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u02/backup/orcl3/cf_%F';
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
+CONFIGURE COMPRESSION ALGORITHM 'BASIC';
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/u02/backup/orcl3/%d_%T_%U';
+# Logs may be deleted only when applied on the standby AND backed up once: with just
+# 'APPLIED ON ALL STANDBY' the 10-minute housekeeping job could delete a log before the next
+# backup, leaving a gap that makes point-in-time recovery into that window impossible.
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+SHOW ALL;

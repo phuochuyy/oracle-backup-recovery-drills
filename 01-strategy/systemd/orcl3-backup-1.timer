@@ -1,0 +1,10 @@
+[Unit]
+Description=orcl3 backup: level 1 every day
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+Unit=orcl3-backup@1.service
+
+[Install]
+WantedBy=timers.target

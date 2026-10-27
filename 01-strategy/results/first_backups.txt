@@ -1,0 +1,26 @@
+== backup_L0_20261028_011215.log
+Starting backup at 28-OCT-26
+piece handle=/u02/backup/orcl3/ORCL3_20261028_0m1cqjvh_22_1_1 tag=ARCH comment=NONE
+piece handle=/u02/backup/orcl3/ORCL3_20261028_0l1cqjvh_21_1_1 tag=ARCH comment=NONE
+Finished backup at 28-OCT-26
+Starting backup at 28-OCT-26
+input datafile file number=00021 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_undotbs1_og136525_.dbf
+input datafile file number=00019 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_system_og13651x_.dbf
+input datafile file number=00022 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_bank_dat_og136sbo_.dbf
+input datafile file number=00020 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_sysaux_og136525_.dbf
+piece handle=/u02/backup/orcl3/ORCL3_20261028_0n8cqjvo_23_1_1 tag=L0 comment=NONE
+input datafile file number=00018 name=/u02/oradata/ORCL3/ggrepl/dbfs_ts01.dbf
+input datafile file number=00017 name=/u02/oradata/ORCL3/ggrepl/app_data01.dbf
+== backup_L1_20261028_011418.log
+Starting backup at 28-OCT-26
+piece handle=/u02/backup/orcl3/ORCL3_20261028_13rfqk3b_35_1_1 tag=ARCH comment=NONE
+Finished backup at 28-OCT-26
+Starting backup at 28-OCT-26
+input datafile file number=00021 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_undotbs1_og136525_.dbf
+input datafile file number=00019 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_system_og13651x_.dbf
+input datafile file number=00022 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_bank_dat_og136sbo_.dbf
+input datafile file number=00020 name=/u02/oradata/ORCL3/ORCL3/5ED1DBF4AB1AEF26E0630A6AA8C05929/datafile/o1_mf_sysaux_og136525_.dbf
+piece handle=/u02/backup/orcl3/ORCL3_20261028_14tfqk3d_36_1_1 tag=L1 comment=NONE
+input datafile file number=00018 name=/u02/oradata/ORCL3/ggrepl/dbfs_ts01.dbf
+input datafile file number=00017 name=/u02/oradata/ORCL3/ggrepl/app_data01.dbf
+input datafile file number=00014 name=/u02/oradata/ORCL3/ggrepl/undotbs01.dbf
