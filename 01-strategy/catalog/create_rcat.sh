@@ -15,6 +15,9 @@ alter session set container = rcat;
 create tablespace rcat_data datafile size 200m autoextend on next 64m maxsize 2g;
 create user rco identified by "$2" default tablespace rcat_data quota unlimited on rcat_data;
 grant recovery_catalog_owner to rco;
+-- 23ai: the role does not include DBMS_LOCK; without it every catalog write fails with
+-- PLS-00201 'DBMS_LOCK' -> RMAN-01005 Internal Error when acquiring lock
+grant execute on sys.dbms_lock to rco;
 exit
 SQL
 echo "catalog owner created in PDB RCAT (service rcat.rac)"
