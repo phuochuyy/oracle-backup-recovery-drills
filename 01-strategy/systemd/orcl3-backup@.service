@@ -1,0 +1,7 @@
+[Unit]
+Description=RMAN backup of orcl3 (%i)
+
+[Service]
+Type=oneshot
+User=oracle
+ExecStart=/u02/backup/bin/backup.sh %i
