@@ -1,7 +1,7 @@
 # Interview notes — Oracle Backup & Recovery Drills
 
-> Status: strategy and 14 drills done, including the RESETLOGS ones on a throw-away CDB, and a backup
-> health check. Not done yet: written runbooks — say so if asked.
+> Status: done — strategy, 14 drills (including the RESETLOGS ones on a throw-away CDB), a backup health
+> check and runbooks written from the drills.
 
 ## The 2-minute story
 
