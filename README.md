@@ -50,3 +50,8 @@ Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.m
 ## Remaining
 
 - Run the health check from a timer and on the standby too
+- **TDE keystore in the backup strategy.** Since the security lab, DRILLPDB's `BANK_DATA` on the RAC is
+  encrypted: its backups are useless on another host without the keystore. The keystore has an off-host
+  copy and a tested restore ([security lab, 02-tde](https://github.com/phuochuyy/oracle-security-compliance-lab/blob/main/02-tde/README.md)),
+  but it is not part of this repo's backup schedule or runbooks yet, and drills 1a/1b were last run before
+  the encryption
