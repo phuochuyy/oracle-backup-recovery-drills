@@ -45,7 +45,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
 
-Runbooks: [03-runbooks](03-runbooks/README.md). Interview notes: [INTERVIEW.md](INTERVIEW.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
+Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
 ## Remaining
 
