@@ -1,7 +1,7 @@
 # Interview notes — Oracle Backup & Recovery Drills
 
-> Status: strategy and the first drills are done; the destructive drills (control file, SYSTEM,
-> PITR, host loss) are still to come — say so if asked.
+> Status: strategy and 12 drills done, including the RESETLOGS ones on a throw-away CDB. Not done yet:
+> redo log member loss, written runbooks — say so if asked.
 
 ## The 2-minute story
 
@@ -48,6 +48,22 @@ automatically from the standby.
 **A batch updated the wrong rows yesterday.** Find what changed with a versions query (by **SCN** —
 `VERSIONS BETWEEN TIMESTAMP` has ~3 s granularity and found nothing in my first try), then
 `FLASHBACK TABLE ... TO SCN` (needs row movement), or Flashback Database / PITR for wider damage.
+
+**All control files are gone.** `SET DBID`, `STARTUP NOMOUNT`, `RESTORE CONTROLFILE FROM AUTOBACKUP`,
+mount, `RECOVER DATABASE`, `OPEN RESETLOGS` (drill 5a, 15 s). My first try restored an *older*
+autobackup from the FRA and recovery stopped with ORA-01194: without the DBID, RMAN does not search the
+configured autobackup location. So the DBID belongs in the runbook.
+
+**Flashback Database or PDB PITR?** Flashback Database rewinds the whole CDB in seconds, but every PDB
+loses its changes. PDB PITR rewinds one PDB (restore + recover, 25 s here, no auxiliary instance thanks to
+local undo) and the others keep running.
+
+**The whole server is gone.** Restore spfile → control file → database from backups, `OPEN RESETLOGS`
+(drill 5f, 76 s on 5 GB). Data since the last archived-log backup is lost — the real answer to host loss
+is a SYNC standby and a failover, the backup is the last line.
+
+**Why a throw-away CDB for those drills?** `RESETLOGS` on orcl3 would break its standby and the GoldenGate
+Extract. I duplicated it from backup onto the standby's VM (which also proves the backups restore).
 
 **Which RMAN compression can I use without extra license?** BASIC. LOW, MEDIUM and HIGH need the Advanced
 Compression Option.
