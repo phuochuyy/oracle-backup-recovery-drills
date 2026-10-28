@@ -1,0 +1,64 @@
+14:36:57 rm /u02/redo2/redo13b.log (group 13 INACTIVE)
+14:37:20 after 7 switches - alert log:
+      1   Current log# 13 seq# 363 mem# 0: /u02/oradata/ORCL3/redo/redo13.log
+      1   Current log# 13 seq# 363 mem# 1: /u02/redo2/redo13b.log
+      1   Current log# 13 seq# 369 mem# 0: /u02/oradata/ORCL3/redo/redo13.log
+      1   Current log# 13 seq# 369 mem# 1: /u02/redo2/redo13b.log
+      6 ORA-00312: online log 13 thread 1: '/u02/redo2/redo13b.log'
+      5 ORA-00313: open failed for members of log group 13 of thread 1
+      1 ORA-00334: archived log: '/u02/oradata/ORCL3/redo/redo13.log'
+      1 ORA-01343: Oracle LogMiner encountered a corruption in the logstream.
+      4 ORA-27037: unable to obtain file status
+      2 ORA-27041: unable to open file
+    GROUP# MEMBER					 STATUS  G		   SEQUENCE#
+---------- --------------------------------------------- ------- ---------------- ----------
+	13 /u02/oradata/ORCL3/redo/redo13.log		 OK	 CURRENT		 369
+	13 /u02/redo2/redo13b.log			 OK	 CURRENT		 369
+	14 /u02/oradata/ORCL3/redo/redo14.log		 OK	 INACTIVE		 364
+	14 /u02/redo2/redo14b.log			 OK	 INACTIVE		 364
+14:38:50 repair: switch so group 13 is no longer CURRENT, checkpoint, drop + re-add member b
+
+System altered.
+
+
+System altered.
+
+
+    GROUP# STATUS
+---------- ----------------
+	13 INACTIVE
+
+1 row selected.
+
+
+Database altered.
+
+
+Database altered.
+
+
+    GROUP# MEMBER					 STATUS
+---------- --------------------------------------------- -------
+	13 /u02/oradata/ORCL3/redo/redo13.log		 OK
+	13 /u02/redo2/redo13b.log			 INVALID
+
+2 rows selected.
+
+
+ SEQUENCE#
+----------
+NAME
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       362
+/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_362_og39jsx1_.arc
+
+       363
+/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_363_og39jx45_.arc
+
+       364
+/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_364_og39k0bz_.arc
+
+
+3 rows selected.
+
+14:38:53 repaired

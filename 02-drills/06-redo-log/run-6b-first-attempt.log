@@ -1,0 +1,20 @@
+14:42:33 group 12 (INACTIVE, archived): delete both members: /u02/oradata/ORCL3/redo/redo12.log /u02/redo2/redo12b.log
+14:42:33 health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #19: 13.5 h ago (max 170 h)
+OK   backup L0/L1           oldest file #9: 13.5 h ago (max 26 h)
+OK   backup archivelog      last 0.2 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   fra used               53 % (reclaimable 0 %)
+CRIT redo member            group 12: /u02/oradata/ORCL3/redo/redo12.log MISSING on disk
+CRIT redo member            group 12: /u02/redo2/redo12b.log MISSING on disk
+OK   archive dest 1         VALID
+OK   archive dest 2         VALID
+OK   gg capture OGG$CAP_EXTB ENABLED
+14:42:34 the database itself does not notice:
+12 /u02/oradata/ORCL3/redo/redo12.log OK
+12 /u02/redo2/redo12b.log OK
+14:42:35 repair: re-check status, CLEAR LOGFILE GROUP 12 (re-creates both members)
+-rw-r----- 1 oracle oinstall 209715712 Oct 28 14:42 /u02/oradata/ORCL3/redo/redo12.log
+-rw-r----- 1 oracle oinstall 209715712 Oct 28 14:42 /u02/redo2/redo12b.log
+14:42:37 switch through all groups, then health check
