@@ -1,0 +1,45 @@
+14:42:57 group 13 (INACTIVE, archived): delete both members: /u02/oradata/ORCL3/redo/redo13.log /u02/redo2/redo13b.log
+14:42:57 health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #19: 13.5 h ago (max 170 h)
+OK   backup L0/L1           oldest file #9: 13.5 h ago (max 26 h)
+OK   backup archivelog      last 0.2 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   fra used               53 % (reclaimable 0 %)
+CRIT redo member            group 13: /u02/oradata/ORCL3/redo/redo13.log MISSING on disk
+CRIT redo member            group 13: /u02/redo2/redo13b.log MISSING on disk
+OK   archive dest 1         VALID
+OK   archive dest 2         VALID
+OK   gg capture OGG$CAP_EXTB ENABLED
+14:42:58 the database itself does not notice:
+13 /u02/oradata/ORCL3/redo/redo13.log OK
+13 /u02/redo2/redo13b.log OK
+14:42:58 repair: re-check status, CLEAR LOGFILE GROUP 13 (re-creates both members)
+-rw-r----- 1 oracle oinstall 209715712 Oct 28 14:42 /u02/oradata/ORCL3/redo/redo13.log
+-rw-r----- 1 oracle oinstall 209715712 Oct 28 14:42 /u02/redo2/redo13b.log
+14:43:00 switch through all groups, then health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #19: 13.5 h ago (max 170 h)
+OK   backup L0/L1           oldest file #9: 13.5 h ago (max 26 h)
+OK   backup archivelog      last 0.2 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   fra used               53 % (reclaimable 0 %)
+OK   redo members           12 on disk
+OK   archive dest 1         VALID
+OK   archive dest 2         VALID
+OK   gg capture OGG$CAP_EXTB ENABLED
+14:43:03 alert log since the drill:
+      1 alter database clear logfile group 12
+      1 alter database clear logfile group 13
+      1 Clearing online log 12 of thread 1 sequence number 368
+      1 Clearing online log 13 of thread 1 sequence number 375
+      1 Completed: alter database clear logfile group 12
+      1 Completed: alter database clear logfile group 13
+      4 ORA-00312: online log 12 thread 1: '/u02/oradata/ORCL3/redo/redo12.log'
+      6 ORA-00312: online log 12 thread 1: '/u02/redo2/redo12b.log'
+      3 ORA-00312: online log 13 thread 1: '/u02/oradata/ORCL3/redo/redo13.log'
+      3 ORA-00312: online log 13 thread 1: '/u02/redo2/redo13b.log'
+      5 ORA-00313: open failed for members of log group 12 of thread 1
+      3 ORA-00313: open failed for members of log group 13 of thread 1
+     15 ORA-27037: unable to obtain file status
+14:43:03 RTO 5 s (from detection to health OK)
