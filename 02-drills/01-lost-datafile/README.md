@@ -18,3 +18,16 @@ Logs: [`run-service.log`](run-service.log), [`run-backup.log`](run-backup.log).
 - Backups taken on the standby restore the primary (same DBID). Without a recovery catalog the
   primary would not even know they exist.
 - ASM/OMF gives the restored file a new name; the control file is updated by RMAN.
+
+## Re-run after TDE (2026-10-29)
+
+Since the security lab, DRILLPDB's `BANK_DATA` is TDE-encrypted (auto-login keystores on both sites) and
+native network encryption is required on the RAC. `service` method re-run twice: **PASS**, RTO **49 s and
+45 s** ([`run-service-after-tde.log`](run-service-after-tde.log)) instead of 14 s.
+
+The RMAN work itself did not change: restore 3 s, recover 2 s, same as before. The extra time is around it:
+RMAN start alone took ~7 s on prm1 (measured with a no-catalog connect), each of the two full catalog
+resyncs ~2 s, and the standby VM was swapping ~3 GB (5 GB VM with ADG + redo apply) right after the lab
+started. Encryption is not proven to be the cause — what is proven is that the drill still works with
+encrypted datafiles: the blocks come over the network encrypted and the standby's keystore is not needed
+on the primary side.

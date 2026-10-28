@@ -27,7 +27,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 
 | # | Failure | Where | Recovery | RTO | Data |
 |---|---------|-------|----------|-----|------|
-| 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s | PASS |
+| 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s (45–49 s re-run with TDE, restore itself unchanged) | PASS |
 | 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s | PASS |
 | 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s | PASS |
 | 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
@@ -45,8 +45,12 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
 
-Runbooks: [03-runbooks](03-runbooks/README.md). Interview notes: [INTERVIEW.md](INTERVIEW.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
+Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
 ## Remaining
 
 - Run the health check from a timer and on the standby too
+- **TDE keystore in the backup strategy.** Since the security lab, DRILLPDB's `BANK_DATA` on the RAC is
+  encrypted: its backups are useless on another host without the keystore. The keystore has an off-host
+  copy and a tested restore ([security lab, 02-tde](https://github.com/phuochuyy/oracle-security-compliance-lab/blob/main/02-tde/README.md)),
+  but it is not part of this repo's backup schedule or runbooks yet. Drill 1a re-run with TDE: PASS
