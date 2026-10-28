@@ -1,7 +1,7 @@
 # Interview notes — Oracle Backup & Recovery Drills
 
-> Status: strategy and 12 drills done, including the RESETLOGS ones on a throw-away CDB. Not done yet:
-> redo log member loss, written runbooks — say so if asked.
+> Status: strategy and 14 drills done, including the RESETLOGS ones on a throw-away CDB, and a backup
+> health check. Not done yet: written runbooks — say so if asked.
 
 ## The 2-minute story
 
@@ -64,6 +64,20 @@ is a SYNC standby and a failover, the backup is the last line.
 
 **Why a throw-away CDB for those drills?** `RESETLOGS` on orcl3 would break its standby and the GoldenGate
 Extract. I duplicated it from backup onto the standby's VM (which also proves the backups restore).
+
+**A redo log member is missing — urgent?** On a plain database it is a warning (the other member works).
+On a GoldenGate source it is an incident: in my drill 6a the database ran on, `V$LOGFILE` even said OK,
+but when the group became CURRENT the capture's LogMiner failed to open it and Extract was down for
+2.5 min until I dropped and re-added the member. I also found orcl3 had only one member per group, on
+the datafile disk — fixed online. My health check now looks at the files on disk.
+
+**Whole redo group lost?** Depends on its state: INACTIVE + archived → `CLEAR LOGFILE` (5 s, no loss);
+not archived → `CLEAR UNARCHIVED LOGFILE` and a new level 0 immediately; CURRENT → crash, incomplete
+recovery or failover to the SYNC standby.
+
+**How do you know backups are fine without reading logs?** A check that reports the backup age of the
+*oldest datafile*, not of the last backup: a level 1 makes automatic level 0 backups of new files, so
+"last level 0" looked recent when the database's level 0 was not.
 
 **Which RMAN compression can I use without extra license?** BASIC. LOW, MEDIUM and HIGH need the Advanced
 Compression Option.
