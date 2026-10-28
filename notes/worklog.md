@@ -39,3 +39,26 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   Opened it read only → PASS.
 - Drill 2: a PL/SQL rename block that forgot NOT NULL constraints (ORA-02250), and a versions query
   by timestamp that found nothing (3 s granularity). Both fixed, both kept in the drill notes.
+
+## Drills on orcl3 (branch `drills/single-instance`)
+
+- **Drill 3, first run:** the datafile name came back cut at 80 characters, so `dd` wrote into a *new*
+  file `.../o1_mf` (75 MB = 9,145 × 8 KB) instead of the datafile. Reading the row returned no error, which
+  is how I noticed. Removed the file after checking size, time and permissions. Script now uses
+  `lines 500`, checks the target is an existing `.dbf`, and stops if the corruption is not really there.
+- **RMAN VALIDATE exits non-zero when it finds corruption** — expected here; `set -e` stopped my script
+  with the block still corrupt. Finished that run by hand, fixed the script, ran it again end to end
+  (RTO 20 s) so the evidence comes from one clean run.
+- **RECOVER TABLE** worked first time (221 s) but left the auxiliary instance's online redo logs (1.6 GB).
+
+## Throw-away CDB DRILL (branch `drills/throwaway-cdb`)
+
+- **DUPLICATE without catalog and target:** `RMAN-05521 ... requires that UNDO TABLESPACE is specified`
+  (because PDBs were skipped). Added `UNDO TABLESPACE 'UNDOTBS1'`. The failed run left an instance mounted on
+  a copy of orcl3's control file — aborted it and removed the copy before retrying.
+- Deliberately **no `NOFILENAMECHECK`**: the standby ORCL3_STB on the same VM uses the same paths.
+- **Host disk at 96 %:** removed the copied orcl3 backups right after the duplicate, replaced the 200 MB redo
+  logs by 64 MB ones.
+- **5a:** wrong autobackup (from the FRA, older) → ORA-01194. `SET ... FORMAT` was ignored until `SET DBID`.
+- **5b:** recovery worked, my check failed — PDBs MOUNTED after restart. `SAVE STATE`.
+- **5c:** `RMAN-06172` — the dummy instance only searched `$ORACLE_HOME/dbs`. Same fix in 5f before running it.

@@ -1,0 +1,69 @@
+14:24:55 shutdown and delete spfile + pfile (DBID 1600577461 noted beforehand, as a runbook says)
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/23.26.0/dbhome_1/dbs/initDRILL.ora'
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:25:00 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+RMAN> set dbid 1600577461;
+executing command: SET DBID
+
+
+RMAN> startup force nomount;
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/23.26.0/dbhome_1/dbs/initDRILL.ora'
+
+starting Oracle instance without parameter file for retrieval of spfile
+Oracle instance started
+
+Total System Global Area    1070370360 bytes
+
+Fixed Size                     5017144 bytes
+Variable Size                276824064 bytes
+Database Buffers             780140544 bytes
+Redo Buffers                   8388608 bytes
+
+
+RMAN> run {
+2>   set controlfile autobackup format for device type disk to '/u02/drill/drill_bkp/cf_%F';
+3>   restore spfile from autobackup;
+4> }
+executing command: SET CONTROLFILE AUTOBACKUP FORMAT
+
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=38 device type=DISK
+
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261028
+channel ORA_DISK_1: AUTOBACKUP found: /u02/drill/drill_bkp/cf_c-1600577461-20261028-02
+channel ORA_DISK_1: restoring spfile from AUTOBACKUP /u02/drill/drill_bkp/cf_c-1600577461-20261028-02
+channel ORA_DISK_1: SPFILE restore from AUTOBACKUP complete
+Finished restore at 28-OCT-26
+
+
+RMAN> startup force;
+Oracle instance started
+database mounted
+database opened
+
+Total System Global Area    1255377968 bytes
+
+Fixed Size                     5008432 bytes
+Variable Size                402653184 bytes
+Database Buffers             838860800 bytes
+Redo Buffers                   8855552 bytes
+
+
+RMAN> 
+
+Recovery Manager complete.
+PASS (5 tables, counts and checksums match)
+14:25:09 RTO 9 s (5c)
