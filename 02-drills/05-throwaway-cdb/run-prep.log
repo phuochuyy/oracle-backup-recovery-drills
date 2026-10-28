@@ -1,0 +1,205 @@
+14:17:39 spfile from pfile, restart on spfile, flashback on, controlfile autobackup, level 0
+create spfile from pfile
+*
+ERROR at line 1:
+ORA-32002: SPFILE creation failed as the specified file is already in use.
+Help: https://docs.oracle.com/error-help/db/ora-32002/
+
+
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORA-32004: obsolete or deprecated parameter(s) specified for RDBMS instance
+ORACLE instance started.
+
+Total System Global Area 1255377968 bytes
+Fixed Size		    5008432 bytes
+Variable Size		  402653184 bytes
+Database Buffers	  838860800 bytes
+Redo Buffers		    8855552 bytes
+Database mounted.
+Database opened.
+alter database flashback on
+*
+ERROR at line 1:
+ORA-38706: Cannot turn on FLASHBACK DATABASE logging.
+ORA-38713: Flashback Database logging is already turned on.
+Help: https://docs.oracle.com/error-help/db/ora-38706/
+
+
+
+LOG_MODE     FLASHBACK_ON
+------------ ------------------
+ARCHIVELOG   YES
+
+
+Database altered.
+
+
+Database altered.
+
+
+Database altered.
+
+
+PL/SQL procedure successfully completed.
+
+
+    GROUP#	   MB STATUS
+---------- ---------- ----------------
+	 1	   64 INACTIVE
+	 2	   64 INACTIVE
+	 3	   64 INACTIVE
+	17	  200 CURRENT
+
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:18:04 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: DRILL (DBID=1600577461)
+
+RMAN> configure controlfile autobackup on;
+using target database control file instead of recovery catalog
+new RMAN configuration parameters:
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+new RMAN configuration parameters are successfully stored
+
+
+RMAN> configure controlfile autobackup format for device type disk to '/u02/drill/drill_bkp/cf_%F';
+new RMAN configuration parameters:
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u02/drill/drill_bkp/cf_%F';
+new RMAN configuration parameters are successfully stored
+
+
+RMAN> configure channel device type disk format '/u02/drill/drill_bkp/%d_%T_%U';
+new RMAN configuration parameters:
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/u02/drill/drill_bkp/%d_%T_%U';
+new RMAN configuration parameters are successfully stored
+
+
+RMAN> configure device type disk parallelism 2 backup type to compressed backupset;
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO COMPRESSED BACKUPSET;
+new RMAN configuration parameters are successfully stored
+
+
+RMAN> configure compression algorithm 'BASIC';
+new RMAN configuration parameters:
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE;
+new RMAN configuration parameters are successfully stored
+
+
+RMAN> backup database plus archivelog;
+
+Starting backup at 28-OCT-26
+current log archived
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=58 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=220 device type=DISK
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=1 RECID=1 STAMP=1247840281
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_2: starting compressed archived log backup set
+channel ORA_DISK_2: specifying archived log(s) in backup set
+input archived log thread=1 sequence=2 RECID=2 STAMP=1247840281
+input archived log thread=1 sequence=3 RECID=3 STAMP=1247840281
+input archived log thread=1 sequence=4 RECID=4 STAMP=1247840281
+input archived log thread=1 sequence=5 RECID=5 STAMP=1247840281
+input archived log thread=1 sequence=6 RECID=6 STAMP=1247840282
+channel ORA_DISK_2: starting piece 1 at 28-OCT-26
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_02ed820u_2_1_1 tag=TAG20261028T141805 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=7 RECID=7 STAMP=1247840282
+input archived log thread=1 sequence=8 RECID=8 STAMP=1247840282
+input archived log thread=1 sequence=9 RECID=9 STAMP=1247840285
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_2: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_03ed820u_3_1_1 tag=TAG20261028T141805 comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_04fd820v_4_1_1 tag=TAG20261028T141805 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 28-OCT-26
+
+Starting backup at 28-OCT-26
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00001 name=/u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og3882mc_.dbf
+input datafile file number=00011 name=/u02/oradata/DRILL/DRILL/datafile/o1_mf_undotbs1_og3882my_.dbf
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00003 name=/u02/oradata/DRILL/DRILL/datafile/o1_mf_sysaux_og388kns_.dbf
+input datafile file number=00007 name=/u02/oradata/DRILL/DRILL/datafile/o1_mf_users_og388l1r_.dbf
+channel ORA_DISK_2: starting piece 1 at 28-OCT-26
+channel ORA_DISK_2: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_06gd8210_6_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:15
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00026 name=/u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og3890ph_.dbf
+input datafile file number=00023 name=/u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_system_og3890q2_.dbf
+channel ORA_DISK_2: starting piece 1 at 28-OCT-26
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_05gd8210_5_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:22
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00024 name=/u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_sysaux_og3897tk_.dbf
+input datafile file number=00025 name=/u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_undotbs1_og38988m_.dbf
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_2: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_07vd821f_7_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:10
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00002 name=/u02/oradata/DRILL/DRILL/48945B67D122C623E063399B5E6478E6/datafile/o1_mf_system_og3882ml_.dbf
+input datafile file number=00009 name=/u02/oradata/DRILL/DRILL/48945B67D122C623E063399B5E6478E6/datafile/o1_mf_undotbs1_og3882n9_.dbf
+channel ORA_DISK_2: starting piece 1 at 28-OCT-26
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_086e821m_8_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:04
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00004 name=/u02/oradata/DRILL/DRILL/48945B67D122C623E063399B5E6478E6/datafile/o1_mf_sysaux_og3890on_.dbf
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_0aae821q_10_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:03
+channel ORA_DISK_2: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_099e821p_9_1_1 tag=TAG20261028T141808 comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:16
+Finished backup at 28-OCT-26
+
+Starting backup at 28-OCT-26
+current log archived
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=10 RECID=10 STAMP=1247840329
+channel ORA_DISK_1: starting piece 1 at 28-OCT-26
+channel ORA_DISK_1: finished piece 1 at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/DRILL_20261028_0bqe822a_11_1_1 tag=TAG20261028T141849 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 28-OCT-26
+
+Starting Control File and SPFILE Autobackup at 28-OCT-26
+piece handle=/u02/drill/drill_bkp/cf_c-1600577461-20261028-01 comment=NONE
+Finished Control File and SPFILE Autobackup at 28-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+14:18:53 DBID 1600577461
+774M	/u02/drill/drill_bkp
