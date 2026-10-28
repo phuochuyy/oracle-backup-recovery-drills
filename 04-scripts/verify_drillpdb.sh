@@ -3,6 +3,8 @@
 # usage (on prm3, as oracle): BANKDB_DIR=... ./verify_drillpdb.sh
 . ~/.bash_profile >/dev/null 2>&1
 : "${BANKDB_DIR:?}"
+# VERIFY_SID: check another instance on the same host (e.g. the throw-away CDB DRILL)
+[ -n "${VERIFY_SID:-}" ] && export ORACLE_SID=$VERIFY_SID
 expected="BRANCHES 100 219112276800
 CUSTOMERS 20000 42985318080702
 ACCOUNTS 30000 64734798406535
