@@ -1,0 +1,78 @@
+14:24:14 shutdown and delete spfile + pfile (DBID 1600577461 noted beforehand, as a runbook says)
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/23.26.0/dbhome_1/dbs/initDRILL.ora'
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:24:19 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+RMAN> set dbid 1600577461;
+executing command: SET DBID
+
+
+RMAN> startup force nomount;
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/23.26.0/dbhome_1/dbs/initDRILL.ora'
+
+starting Oracle instance without parameter file for retrieval of spfile
+Oracle instance started
+
+Total System Global Area    1070370360 bytes
+
+Fixed Size                     5017144 bytes
+Variable Size                276824064 bytes
+Database Buffers             780140544 bytes
+Redo Buffers                   8388608 bytes
+
+
+RMAN> restore spfile from autobackup;
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=162 device type=DISK
+
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261028
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261027
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261026
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261025
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261024
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261023
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261022
+channel ORA_DISK_1: no AUTOBACKUP in 7 days found
+RMAN Command Id : 2026-10-28T14:24:19
+RMAN Command Id : 2026-10-28T14:24:19
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of restore command at 10/28/2026 14:24:28
+RMAN-06172: no AUTOBACKUP found or specified handle is not a valid copy or piece
+RMAN Client Diagnostic Trace file : /u01/app/oracle/diag/clients/user_oracle/RMAN_2841259421_116/trace/ora_rman_8021_0.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/dummy/DRILL/trace/DRILL_ora_8216.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/dummy/DRILL/trace/DRILL_ora_8210.trc
+
+
+RMAN> startup force;
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/u01/app/oracle/product/23.26.0/dbhome_1/dbs/initDRILL.ora'
+
+starting Oracle instance without parameter file for retrieval of spfile
+Oracle instance started
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of startup command at 10/28/2026 14:24:30
+ORA-00205: error in identifying control file, check alert log for more info
+Help: https://docs.oracle.com/error-help/db/ora-00205/
+
+
+RMAN> 
+
+Recovery Manager complete.
+FAIL (no output — PDB not open?)
+14:24:30 RTO 12 s (5c)

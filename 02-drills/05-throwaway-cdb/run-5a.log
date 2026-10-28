@@ -1,0 +1,102 @@
+14:22:14 shutdown abort and delete all control files: /u02/oradata/DRILL/DRILL/controlfile/o1_mf_og384r8p_.ctl /u02/oradata/DRILL_FRA/DRILL/controlfile/o1_mf_og384r90_.ctl
+ORACLE instance shut down.
+ORA-32004: obsolete or deprecated parameter(s) specified for RDBMS instance
+ORACLE instance started.
+
+Total System Global Area 1255377968 bytes
+Fixed Size		    5008432 bytes
+Variable Size		  402653184 bytes
+Database Buffers	  838860800 bytes
+Redo Buffers		    8855552 bytes
+ORA-00205: error in identifying control file, check alert log for more info
+Help: https://docs.oracle.com/error-help/db/ora-00205/
+
+
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:22:17 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: DRILL (not mounted)
+
+RMAN> set dbid 1600577461;
+executing command: SET DBID
+
+
+RMAN> startup nomount;
+database is already started
+
+
+RMAN> run {
+2>   set controlfile autobackup format for device type disk to '/u02/drill/drill_bkp/cf_%F';
+3>   restore controlfile from autobackup;
+4> }
+executing command: SET CONTROLFILE AUTOBACKUP FORMAT
+
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=40 device type=DISK
+
+recovery area destination: /u02/oradata/DRILL_FRA
+database name (or database unique name) used for search: DRILL
+channel ORA_DISK_1: AUTOBACKUP /u02/oradata/DRILL_FRA/DRILL/autobackup/2026_10_28/o1_mf_s_1247840197_og38bosm_.bkp found in the recovery area
+channel ORA_DISK_1: looking for AUTOBACKUP on day: 20261028
+channel ORA_DISK_1: AUTOBACKUP found: /u02/drill/drill_bkp/cf_c-1600577461-20261028-01
+channel ORA_DISK_1: restoring control file from AUTOBACKUP /u02/drill/drill_bkp/cf_c-1600577461-20261028-01
+channel ORA_DISK_1: control file restore from AUTOBACKUP complete
+output file name=/u02/oradata/DRILL/DRILL/controlfile/o1_mf_og384r8p_.ctl
+output file name=/u02/oradata/DRILL_FRA/DRILL/controlfile/o1_mf_og384r90_.ctl
+Finished restore at 28-OCT-26
+
+
+RMAN> alter database mount;
+released channel: ORA_DISK_1
+Statement processed
+
+
+RMAN> recover database;
+Starting recover at 28-OCT-26
+Starting implicit crosscheck backup at 28-OCT-26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=40 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=202 device type=DISK
+Crosschecked 5 objects
+Crosschecked 6 objects
+Finished implicit crosscheck backup at 28-OCT-26
+
+Starting implicit crosscheck copy at 28-OCT-26
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+Finished implicit crosscheck copy at 28-OCT-26
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+starting media recovery
+
+archived log for thread 1 with sequence 11 is already on disk as file /u02/oradata/DRILL/DRILL/onlinelog/o1_mf_2_og38f7vw_.log
+recovery status time_needed 2026-10-28 14:18:49
+archived log file name=/u02/oradata/DRILL/DRILL/onlinelog/o1_mf_2_og38f7vw_.log thread=1 sequence=11
+media recovery complete, elapsed time: 00:00:00
+Finished recover at 28-OCT-26
+
+
+RMAN> alter database open resetlogs;
+Statement processed
+
+
+RMAN> 
+
+Recovery Manager complete.
+
+Pluggable database altered.
+
+PASS (5 tables, counts and checksums match)
+14:22:31 RTO 15 s (5a)

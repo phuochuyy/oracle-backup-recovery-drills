@@ -1,0 +1,146 @@
+14:19:36 shutdown abort and delete all control files: /u02/oradata/DRILL/DRILL/controlfile/o1_mf_og384r8p_.ctl /u02/oradata/DRILL_FRA/DRILL/controlfile/o1_mf_og384r90_.ctl
+ORACLE instance shut down.
+ORA-32004: obsolete or deprecated parameter(s) specified for RDBMS instance
+ORACLE instance started.
+
+Total System Global Area 1255377968 bytes
+Fixed Size		    5008432 bytes
+Variable Size		  402653184 bytes
+Database Buffers	  838860800 bytes
+Redo Buffers		    8855552 bytes
+ORA-00205: error in identifying control file, check alert log for more info
+Help: https://docs.oracle.com/error-help/db/ora-00205/
+
+
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:19:52 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: DRILL (not mounted)
+
+RMAN> startup nomount;
+database is already started
+
+
+RMAN> restore controlfile from autobackup;
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=200 device type=DISK
+
+recovery area destination: /u02/oradata/DRILL_FRA
+database name (or database unique name) used for search: DRILL
+channel ORA_DISK_1: AUTOBACKUP /u02/oradata/DRILL_FRA/DRILL/autobackup/2026_10_28/o1_mf_s_1247840197_og38bosm_.bkp found in the recovery area
+AUTOBACKUP search with format "%F" not attempted because DBID was not set
+channel ORA_DISK_1: restoring control file from AUTOBACKUP /u02/oradata/DRILL_FRA/DRILL/autobackup/2026_10_28/o1_mf_s_1247840197_og38bosm_.bkp
+channel ORA_DISK_1: control file restore from AUTOBACKUP complete
+output file name=/u02/oradata/DRILL/DRILL/controlfile/o1_mf_og384r8p_.ctl
+output file name=/u02/oradata/DRILL_FRA/DRILL/controlfile/o1_mf_og384r90_.ctl
+Finished restore at 28-OCT-26
+
+
+RMAN> alter database mount;
+released channel: ORA_DISK_1
+Statement processed
+
+
+RMAN> recover database;
+Starting recover at 28-OCT-26
+Starting implicit crosscheck backup at 28-OCT-26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=43 device type=DISK
+Finished implicit crosscheck backup at 28-OCT-26
+
+Starting implicit crosscheck copy at 28-OCT-26
+using channel ORA_DISK_1
+Finished implicit crosscheck copy at 28-OCT-26
+
+searching for all files in the recovery area
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38f91r_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_2_og38f9gd_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_3_og38f9hl_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_4_og38f9qg_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_5_og38f9r5_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_6_og38f9yk_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_7_og38fb09_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_8_og38fb5m_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_9_og38ffcq_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_10_og38gstg_.arc
+File Name: /u02/oradata/DRILL_FRA/DRILL/autobackup/2026_10_28/o1_mf_s_1247840197_og38bosm_.bkp
+
+using channel ORA_DISK_1
+
+starting media recovery
+
+archived log for thread 1 with sequence 1 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38f91r_.arc
+archived log for thread 1 with sequence 2 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_2_og38f9gd_.arc
+archived log for thread 1 with sequence 3 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_3_og38f9hl_.arc
+archived log for thread 1 with sequence 4 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_4_og38f9qg_.arc
+archived log for thread 1 with sequence 5 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_5_og38f9r5_.arc
+archived log for thread 1 with sequence 6 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_6_og38f9yk_.arc
+archived log for thread 1 with sequence 7 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_7_og38fb09_.arc
+archived log for thread 1 with sequence 8 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_8_og38fb5m_.arc
+archived log for thread 1 with sequence 9 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_9_og38ffcq_.arc
+archived log for thread 1 with sequence 10 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_10_og38gstg_.arc
+recovery status time_needed 2026-10-28 14:16:24
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38f91r_.arc thread=1 sequence=1
+recovery status time_needed 2026-10-28 14:18:00
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_2_og38f9gd_.arc thread=1 sequence=2
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_3_og38f9hl_.arc thread=1 sequence=3
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_4_og38f9qg_.arc thread=1 sequence=4
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_5_og38f9r5_.arc thread=1 sequence=5
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_6_og38f9yk_.arc thread=1 sequence=6
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_7_og38fb09_.arc thread=1 sequence=7
+recovery status time_needed 2026-10-28 14:18:01
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_8_og38fb5m_.arc thread=1 sequence=8
+recovery status time_needed 2026-10-28 14:18:02
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_9_og38ffcq_.arc thread=1 sequence=9
+recovery status time_needed 2026-10-28 14:18:05
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_10_og38gstg_.arc thread=1 sequence=10
+Oracle error from target database: 
+ORA-01547: warning: RECOVER succeeded but OPEN RESETLOGS would get error below
+ORA-01194: file 1 needs more recovery to be consistent
+ORA-01110: data file 1: '/u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og3882mc_.dbf'
+Help: https://docs.oracle.com/error-help/db/ora-01547/
+
+unable to find archived log
+archived log thread=1 sequence=11
+RMAN Command Id : 2026-10-28T14:19:52
+RMAN Command Id : 2026-10-28T14:19:52
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 10/28/2026 14:19:59
+RMAN-06054: media recovery requesting unknown archived log for thread 1 with sequence 11 and starting SCN of 32017478
+RMAN Client Diagnostic Trace file : /u01/app/oracle/diag/clients/user_oracle/RMAN_2841259421_116/trace/ora_rman_4862_0.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/drill/DRILL/trace/DRILL_ora_4899.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/drill/DRILL/trace/DRILL_ora_4895.trc
+
+
+RMAN> alter database open resetlogs;
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of sql statement command at 10/28/2026 14:19:59
+ORA-01194: file 1 needs more recovery to be consistent
+ORA-01110: data file 1: '/u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og3882mc_.dbf'
+Help: https://docs.oracle.com/error-help/db/ora-01194/
+
+
+RMAN> 
+
+Recovery Manager complete.
+FAIL (no output — PDB not open?)
+14:20:05 RTO 19 s (5a)

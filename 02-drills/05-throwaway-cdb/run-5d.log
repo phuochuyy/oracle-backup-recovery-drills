@@ -1,0 +1,31 @@
+14:25:15 SCN    36026766, then DROP USER bank CASCADE in DRILLPDB
+
+Session altered.
+
+
+User dropped.
+
+FAIL (no output — PDB not open?)
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORA-32004: obsolete or deprecated parameter(s) specified for RDBMS instance
+ORACLE instance started.
+
+Total System Global Area 1255377968 bytes
+Fixed Size		    5008432 bytes
+Variable Size		  402653184 bytes
+Database Buffers	  838860800 bytes
+Redo Buffers		    8855552 bytes
+Database mounted.
+
+Flashback complete.
+
+
+Database altered.
+
+
+Pluggable database altered.
+
+PASS (5 tables, counts and checksums match)
+14:25:34 RTO 17 s (5d)
