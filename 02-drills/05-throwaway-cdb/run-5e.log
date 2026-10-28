@@ -1,0 +1,103 @@
+14:25:42 SCN    36028902, then DROP TABLE bank.cards PURGE (not in the recycle bin)
+
+Session altered.
+
+
+Table dropped.
+
+FAIL (no output — PDB not open?)
+
+Pluggable database altered.
+
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:25:44 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: DRILL (DBID=1600577461)
+
+RMAN> run {
+2>   set until scn    36028902;
+3>   restore pluggable database drillpdb;
+4>   recover pluggable database drillpdb;
+5> }
+executing command: SET until clause (SCN)
+
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+List of Pluggable Database Incarnations
+DB Key  PDB Key PDBInc Key DBInc Key   PDB Name   Status     Inc SCN           Inc Time           Begin Reset SCN   Begin Reset Time
+------- ------- --------   ---------   -------    --------  ---------------   ------------------  ---------------  ------------------
+4       5        0          4          DRILLPDB   CURRENT    36026768         28-OCT-26            36026768         28-OCT-26            
+End Reset SCN:36026768         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+2       5        0          2          DRILLPDB   PARENT     32004519         28-OCT-26            32004519         28-OCT-26            
+End Reset SCN:32004519         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+1       5        0          1          DRILLPDB   PARENT     2051775          24-OCT-26            2051775          24-OCT-26            
+End Reset SCN:2051775          End Reset Time:24-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+3       5        0          3          DRILLPDB   PARENT     32017650         28-OCT-26            32017650         28-OCT-26            
+End Reset SCN:32017650         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=222 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=67 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00023 to /u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_system_og3890q2_.dbf
+channel ORA_DISK_1: restoring datafile 00026 to /u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og3890ph_.dbf
+channel ORA_DISK_1: reading from backup piece /u02/drill/drill_bkp/DRILL_20261028_07vd821f_7_1_1
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00024 to /u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_sysaux_og3897tk_.dbf
+channel ORA_DISK_2: restoring datafile 00025 to /u02/oradata/DRILL/DRILL/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_undotbs1_og38988m_.dbf
+channel ORA_DISK_2: reading from backup piece /u02/drill/drill_bkp/DRILL_20261028_086e821m_8_1_1
+channel ORA_DISK_1: piece handle=/u02/drill/drill_bkp/DRILL_20261028_07vd821f_7_1_1 tag=TAG20261028T141808
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:15
+channel ORA_DISK_2: piece handle=/u02/drill/drill_bkp/DRILL_20261028_086e821m_8_1_1 tag=TAG20261028T141808
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:15
+Finished restore at 28-OCT-26
+
+Starting recover at 28-OCT-26
+List of Pluggable Database Incarnations
+DB Key  PDB Key PDBInc Key DBInc Key   PDB Name   Status     Inc SCN           Inc Time           Begin Reset SCN   Begin Reset Time
+------- ------- --------   ---------   -------    --------  ---------------   ------------------  ---------------  ------------------
+4       5        0          4          DRILLPDB   CURRENT    36026768         28-OCT-26            36026768         28-OCT-26            
+End Reset SCN:36026768         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+2       5        0          2          DRILLPDB   PARENT     32004519         28-OCT-26            32004519         28-OCT-26            
+End Reset SCN:32004519         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+1       5        0          1          DRILLPDB   PARENT     2051775          24-OCT-26            2051775          24-OCT-26            
+End Reset SCN:2051775          End Reset Time:24-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+3       5        0          3          DRILLPDB   PARENT     32017650         28-OCT-26            32017650         28-OCT-26            
+End Reset SCN:32017650         End Reset Time:28-OCT-26        Guid:5ED75E92D4C4500AE0630A6AA8C0EA9D
+current log archived
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+
+starting media recovery
+
+archived log for thread 1 with sequence 1 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38v6nr_.arc
+archived log for thread 1 with sequence 2 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_2_og38v6r5_.arc
+archived log for thread 1 with sequence 3 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_3_og38v6vd_.arc
+archived log for thread 1 with sequence 4 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_4_og38v6yj_.arc
+archived log for thread 1 with sequence 1 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38w9ts_.arc
+recovery status time_needed 2026-10-28 14:22:27
+recovery status time_needed 2026-10-28 14:23:15
+recovery status time_needed 2026-10-28 14:24:05
+recovery status time_needed 2026-10-28 14:24:51
+media recovery complete, elapsed time: 00:00:04
+Finished recover at 28-OCT-26
+
+
+RMAN> alter pluggable database drillpdb open resetlogs;
+Statement processed
+
+
+RMAN> 
+
+Recovery Manager complete.
+PASS (5 tables, counts and checksums match)
+14:26:08 RTO 25 s (5e)

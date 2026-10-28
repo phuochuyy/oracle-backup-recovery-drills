@@ -1,0 +1,27 @@
+group 12: member b added
+group 13: member b added
+group 14: member b added
+group 15: member b added
+group 16: member b added
+group 17: member b added
+
+PL/SQL procedure successfully completed.
+
+
+    GROUP# MEMBER					 STATUS  GROUP_STATUS
+---------- --------------------------------------------- ------- ----------------
+	12 /u02/oradata/ORCL3/redo/redo12.log		 OK	 CURRENT
+	12 /u02/redo2/redo12b.log			 OK	 CURRENT
+	13 /u02/oradata/ORCL3/redo/redo13.log		 OK	 INACTIVE
+	13 /u02/redo2/redo13b.log			 OK	 INACTIVE
+	14 /u02/oradata/ORCL3/redo/redo14.log		 OK	 INACTIVE
+	14 /u02/redo2/redo14b.log			 OK	 INACTIVE
+	15 /u02/oradata/ORCL3/redo/redo15.log		 OK	 INACTIVE
+	15 /u02/redo2/redo15b.log			 OK	 INACTIVE
+	16 /u02/oradata/ORCL3/redo/redo16.log		 OK	 INACTIVE
+	16 /u02/redo2/redo16b.log			 OK	 INACTIVE
+	17 /u02/oradata/ORCL3/redo/redo17.log		 OK	 INACTIVE
+	17 /u02/redo2/redo17b.log			 OK	 INACTIVE
+
+12 rows selected.
+

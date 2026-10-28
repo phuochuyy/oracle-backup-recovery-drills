@@ -1,0 +1,82 @@
+14:23:30 shutdown abort and delete SYSTEM datafile /u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og38p7b8_.dbf
+ORACLE instance shut down.
+ORA-32004: obsolete or deprecated parameter(s) specified for RDBMS instance
+ORACLE instance started.
+
+Total System Global Area 1255377968 bytes
+Fixed Size		    5008432 bytes
+Variable Size		  402653184 bytes
+Database Buffers	  838860800 bytes
+Redo Buffers		    8855552 bytes
+Database mounted.
+ORA-01157: cannot identify/lock data file 1 - see DBWR trace file
+ORA-01110: data file 1:
+'/u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og38p7b8_.dbf'
+Help: https://docs.oracle.com/error-help/db/ora-01157/
+
+
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:23:34 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: DRILL (DBID=1600577461, not open)
+
+RMAN> startup force mount;
+Oracle instance started
+database mounted
+
+Total System Global Area    1255377968 bytes
+
+Fixed Size                     5008432 bytes
+Variable Size                402653184 bytes
+Database Buffers             838860800 bytes
+Redo Buffers                   8855552 bytes
+
+
+RMAN> restore datafile 1;
+Starting restore at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=39 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=40 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00001 to /u02/oradata/DRILL/DRILL/datafile/o1_mf_system_og38p7b8_.dbf
+channel ORA_DISK_1: reading from backup piece /u02/drill/drill_bkp/DRILL_20261028_05gd8210_5_1_1
+channel ORA_DISK_1: piece handle=/u02/drill/drill_bkp/DRILL_20261028_05gd8210_5_1_1 tag=TAG20261028T141808
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:25
+Finished restore at 28-OCT-26
+
+
+RMAN> recover datafile 1;
+Starting recover at 28-OCT-26
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+starting media recovery
+
+archived log for thread 1 with sequence 10 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_10_og38ogct_.arc
+archived log for thread 1 with sequence 11 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_11_og38oggg_.arc
+archived log for thread 1 with sequence 1 is already on disk as file /u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_1_og38q36m_.arc
+recovery status time_needed 2026-10-28 14:18:08
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_10_og38ogct_.arc thread=1 sequence=10
+recovery status time_needed 2026-10-28 14:18:49
+archived log file name=/u02/oradata/DRILL_FRA/DRILL/archivelog/2026_10_28/o1_mf_1_11_og38oggg_.arc thread=1 sequence=11
+media recovery complete, elapsed time: 00:00:01
+Finished recover at 28-OCT-26
+
+
+RMAN> alter database open;
+Statement processed
+
+
+RMAN> 
+
+Recovery Manager complete.
+PASS (5 tables, counts and checksums match)
+14:24:07 RTO 34 s (5b)

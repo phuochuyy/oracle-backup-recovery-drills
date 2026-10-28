@@ -1,7 +1,7 @@
 # Oracle Backup & Recovery Drills — RMAN · Flashback · measured RTO
 
-> Status: **in progress** — backup strategy done on orcl3 (single instance); drills next, on the
-> RAC cluster (Region A) and on a throw-away CDB for the destructive ones.
+> Status: backup strategy done (orcl3, and the RAC offloaded to its standby); **14 drills done** on the
+> RAC primary, on orcl3 and on a throw-away CDB for the RESETLOGS ones; backup health check; runbooks per failure type.
 > A backup is only proven by a restore: each drill records the steps run, the time to recover, and
 > the data verified afterwards.
 
@@ -15,48 +15,38 @@
 | Location | `/u02/backup` on a different virtual disk than the datafiles |
 | Block change tracking | enabled — level 1 read 0.1 % of blocks |
 | Archived log deletion | applied on the standby **and** backed up once ([why](notes/worklog.md)) |
+| Online redo | 2 members per group on different disks ([found with 1](02-drills/06-redo-log/)) |
+| Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture |
 | Proof | `RESTORE DATABASE VALIDATE` + archived logs since level 0, no errors |
 
 First results: [`01-strategy/results`](01-strategy/results/README.md) — level 0 111 s → 2.3 GB, level 1 10 s.
 
 Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_drillpdb.sh`](01-strategy/create_drillpdb.sh)); after every drill [`verify_drillpdb.sh`](04-scripts/verify_drillpdb.sh) compares counts and checksums with the known values.
 
-## Goal
+## Drills done
 
-Design a backup strategy for the lab databases and rehearse the failures a DBA must recover from,
-with a runbook and a measured recovery time for each.
+| # | Failure | Where | Recovery | RTO | Data |
+|---|---------|-------|----------|-----|------|
+| 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s | PASS |
+| 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s | PASS |
+| 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s | PASS |
+| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
+| 3 | [Corrupted block](02-drills/03-block-corruption/) | orcl3, filesystem | `VALIDATE` + `RECOVER CORRUPTION LIST`, PDB stays open | 20 s | PASS |
+| 4 | [TRUNCATE by mistake](02-drills/04-recover-table/) | orcl3 | `RECOVER TABLE ... UNTIL SCN` (auxiliary instance) + copy back | 221 s | PASS |
+| 5a | [All control files lost](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | `SET DBID`, control file from autobackup, `RESETLOGS` | 15 s | PASS |
+| 5b | [SYSTEM datafile lost](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | mount, restore + recover datafile 1 | 34 s | PASS |
+| 5c | [spfile lost](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | dummy instance, spfile from autobackup | 9 s | PASS |
+| 5d | [`DROP USER ... CASCADE`](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | Flashback Database to SCN | 17 s | PASS |
+| 5e | [`DROP TABLE ... PURGE`](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | PDB point-in-time recovery (no auxiliary instance) | 25 s | PASS |
+| 5f | [Host loss (only backups left)](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | spfile → control file → database, `RESETLOGS` | 76 s | PASS |
+| 6a | [One redo member lost](02-drills/06-redo-log/) | orcl3 (primary, GG source) | drop + add member; **GoldenGate Extract was down 2.5 min** | 0 s DB | PASS |
+| 6b | [Whole redo group lost](02-drills/06-redo-log/) | orcl3 | found by health check, `CLEAR LOGFILE` (inactive, archived) | 5 s | PASS |
 
-## Strategy to implement
+Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
+(PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
 
-- ARCHIVELOG, Fast Recovery Area sizing, block change tracking
-- Incremental level 0 weekly + level 1 daily, compressed, `BACKUP OPTIMIZATION ON`
-- Backups offloaded to the Data Guard standby (Region B: stb3), retention policy + `DELETE OBSOLETE`
-- Control file / SPFILE autobackup; `RESTORE ... VALIDATE` scheduled check
-- Optional: Zero Data Loss–style archive log retention on the standby
+Runbooks: [03-runbooks](03-runbooks/README.md). Interview notes: [INTERVIEW.md](INTERVIEW.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
-## Drills
+## Remaining
 
-| # | Failure | Recovery | Record |
-|---|---------|----------|--------|
-| 1 | Lost datafile (non-system) | `RESTORE/RECOVER DATAFILE` (also `FROM SERVICE` standby) | RTO, rows checked |
-| 2 | Lost SYSTEM datafile | mount, restore, recover | RTO |
-| 3 | Lost all control files | restore from autobackup, `RESETLOGS` | RTO, SCN |
-| 4 | Lost SPFILE | restore from autobackup | RTO |
-| 5 | Lost redo log member / group | clear / recreate | impact |
-| 6 | Logical error: dropped table | Flashback Drop; `RECOVER TABLE ... UNTIL SCN` | rows restored |
-| 7 | Bad batch update | Flashback Query / Table / Database | SCN used, rows |
-| 8 | PDB point-in-time recovery | `RECOVER PLUGGABLE DATABASE UNTIL ...` | RTO, other PDBs unaffected |
-| 9 | Block corruption | `VALIDATE`, `RECOVER ... BLOCK` | blocks repaired |
-| 10 | Full loss of host | restore to new VM / `DUPLICATE` | end-to-end RTO |
-
-## Deliverables checklist
-
-- [ ] `01-strategy/` RMAN configuration + backup scripts + cron/systemd timers
-- [ ] `02-drills/<n>-<name>.md` per drill: how the failure was caused, commands, output, RTO
-- [ ] `03-runbooks/` one-page recovery runbook per failure type
-- [ ] `04-scripts/` backup monitoring (last backup age, FRA usage, `V$RMAN_STATUS` errors)
-- [ ] RTO summary table in this README
-
-## CV line (fill only with measured numbers)
-
-`Ran N RMAN/Flashback recovery drills (datafile, control file, PITR, table recovery); RTO X–Y min.`
+- Run the health check from a timer and on the standby too
