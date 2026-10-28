@@ -1,0 +1,142 @@
+14:04:15 ACCOUNTS row 1234 is in file #26 block 9144 (/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf)
+14:04:16 overwrite block 9144 with zeros (dd, direct IO) and flush the buffer cache
+
+System altered.
+
+14:04:16 read the row
+ORA-01578: ORACLE data block corrupted (file # 26, block # 9144)
+ORA-01110: data file 26:
+14:04:18 find all corrupt blocks: VALIDATE DATAFILE
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:04:17 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> validate datafile 26;
+Starting validate at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=106 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=351 device type=DISK
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+input datafile file number=00026 name=/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:01
+List of Datafiles
+=================
+File Status Marked Corrupt Empty Blocks Blocks Examined High SCN
+---- ------ -------------- ------------ --------------- ----------
+26   FAILED 0              48640        65536           31960242  
+  File Name: /u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf
+  Block Type Blocks Failing Blocks Processed
+  ---------- -------------- ----------------
+  Data       0              6557            
+  Index      0              1430            
+  Other      1              8909            
+
+validate found one or more corrupt blocks
+See trace file /u01/app/oracle/diag/rdbms/orcl3/ORCL3/trace/ORCL3_ora_3840.trc for details
+Finished validate at 28-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+
+     FILE#     BLOCK#	  BLOCKS CORRUPTIO
+---------- ---------- ---------- ---------
+	26	 9144	       1 ALL ZERO
+
+14:04:21 repair: RECOVER CORRUPTION LIST (block media recovery from the level 0/1 backups + archived logs)
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Wed Oct 28 14:04:20 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> recover corruption list;
+Starting recover at 28-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=67 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=352 device type=DISK
+searching flashback logs for block images until SCN 31961720
+finished flashback log search, restored 1 blocks
+
+starting media recovery
+
+archived log for thread 1 with sequence 342 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_342_og1v4s55_.arc
+archived log for thread 1 with sequence 343 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_343_og1v6h90_.arc
+archived log for thread 1 with sequence 344 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_344_og1vfcm1_.arc
+archived log for thread 1 with sequence 345 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_345_og1x5jv4_.arc
+archived log for thread 1 with sequence 346 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_346_og1x62cq_.arc
+archived log for thread 1 with sequence 347 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_347_og37gm7j_.arc
+archived log for thread 1 with sequence 348 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_348_og37jxkt_.arc
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=338
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_0m1cqjvh_22_1_1
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=337
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_0l1cqjvh_21_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_0m1cqjvh_22_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=339
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_11bfqk2r_33_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_11bfqk2r_33_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=340
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_13rfqk3b_35_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_13rfqk3b_35_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=341
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1c2gqk3i_44_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_1c2gqk3i_44_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_0l1cqjvh_21_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:05
+recovery status time_needed 2026-10-28 01:11:17
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_337_og37msvx_.arc RECID=693 STAMP=1247839470
+recovery status time_needed 2026-10-28 01:11:25
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_338_og37msvg_.arc RECID=689 STAMP=1247839465
+recovery status time_needed 2026-10-28 01:12:16
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_339_og37mv23_.arc RECID=690 STAMP=1247839467
+recovery status time_needed 2026-10-28 01:14:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_340_og37mw4y_.arc RECID=691 STAMP=1247839468
+recovery status time_needed 2026-10-28 01:14:18
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_28/o1_mf_1_341_og37mx7n_.arc RECID=692 STAMP=1247839469
+recovery status time_needed 2026-10-28 01:14:25
+recovery status time_needed 2026-10-28 01:25:28
+media recovery complete, elapsed time: 00:00:07
+Finished recover at 28-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+14:04:39 verify: PASS (5 tables, counts and checksums match)
+14:04:39 RTO 20 s (block media recovery, PDB stayed open)

@@ -38,7 +38,12 @@ before the next backup and break PITR into that window.
 
 **Someone dropped a table.** If the recycle bin has it: `FLASHBACK TABLE ... TO BEFORE DROP` in < 1 s —
 but foreign keys are not restored and indexes/constraints come back with `BIN$` names (drill 2a).
-If it was truncated or purged: `RECOVER TABLE` from backup (planned drill).
+If it was truncated or purged: `RECOVER TABLE ... UNTIL SCN` from backup — drill 4: 500,000 rows back in
+221 s through an automatic auxiliary instance.
+
+**A query fails with ORA-01578.** Find all bad blocks with `VALIDATE`, repair only those with
+`RECOVER CORRUPTION LIST` — the PDB stays open (drill 3, 20 s). With an ADG standby, 23ai repairs it
+automatically from the standby.
 
 **A batch updated the wrong rows yesterday.** Find what changed with a versions query (by **SCN** —
 `VERSIONS BETWEEN TIMESTAMP` has ~3 s granularity and found nothing in my first try), then

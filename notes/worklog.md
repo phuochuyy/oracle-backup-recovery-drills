@@ -39,3 +39,14 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   Opened it read only → PASS.
 - Drill 2: a PL/SQL rename block that forgot NOT NULL constraints (ORA-02250), and a versions query
   by timestamp that found nothing (3 s granularity). Both fixed, both kept in the drill notes.
+
+## Drills on orcl3 (branch `drills/single-instance`)
+
+- **Drill 3, first run:** the datafile name came back cut at 80 characters, so `dd` wrote into a *new*
+  file `.../o1_mf` (75 MB = 9,145 × 8 KB) instead of the datafile. Reading the row returned no error, which
+  is how I noticed. Removed the file after checking size, time and permissions. Script now uses
+  `lines 500`, checks the target is an existing `.dbf`, and stops if the corruption is not really there.
+- **RMAN VALIDATE exits non-zero when it finds corruption** — expected here; `set -e` stopped my script
+  with the block still corrupt. Finished that run by hand, fixed the script, ran it again end to end
+  (RTO 20 s) so the evidence comes from one clean run.
+- **RECOVER TABLE** worked first time (221 s) but left the auxiliary instance's online redo logs (1.6 GB).
