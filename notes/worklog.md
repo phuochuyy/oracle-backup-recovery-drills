@@ -62,3 +62,18 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - **5a:** wrong autobackup (from the FRA, older) → ORA-01194. `SET ... FORMAT` was ignored until `SET DBID`.
 - **5b:** recovery worked, my check failed — PDBs MOUNTED after restart. `SAVE STATE`.
 - **5c:** `RMAN-06172` — the dummy instance only searched `$ORACLE_HOME/dbs`. Same fix in 5f before running it.
+
+## Redo logs and the health check (branch `drills/redo-log`)
+
+- **Found:** orcl3 had one member per redo group, on the datafile/FRA disk. Added a second member on the
+  other disk online (`multiplex_redo.sh`).
+- **6a surprised me:** deleting one member did nothing to the database (`V$LOGFILE` still OK — LGWR keeps
+  the file open), but the GoldenGate capture aborted when the group became CURRENT (`ORA-01343`, then
+  `ORA-01304`) and Extract abended in a loop for 2.5 min. Fixed by drop + re-add member; Extract came back
+  by autorestart.
+- **Health check, first version wrong:** "last level 0" was 12.7 h old — the same as the last level 1,
+  because the level 1 run had made automatic level 0 backups of the new RCAT datafiles. Switched to "oldest
+  datafile". Then it reported file 30 (RCAT) as never having a level 0: it only has a level 1 whose
+  `incremental_change# = creation_change#`. `RESTORE DATAFILE 30 PREVIEW` showed RMAN restores from it, so it
+  counts as a base. Also sorted by the `to_char` string at first ("9.0" > "13.5").
+- **6b first run:** `set -e` + `grep` with no output, again.
