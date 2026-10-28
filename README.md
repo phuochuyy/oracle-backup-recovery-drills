@@ -1,8 +1,7 @@
 # Oracle Backup & Recovery Drills — RMAN · Flashback · measured RTO
 
 > Status: backup strategy done (orcl3, and the RAC offloaded to its standby); **14 drills done** on the
-> RAC primary, on orcl3 and on a throw-away CDB for the RESETLOGS ones; backup health check. Still open:
-> one-page runbooks.
+> RAC primary, on orcl3 and on a throw-away CDB for the RESETLOGS ones; backup health check; runbooks per failure type.
 > A backup is only proven by a restore: each drill records the steps run, the time to recover, and
 > the data verified afterwards.
 
@@ -46,9 +45,8 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
 
-Interview notes: [INTERVIEW.md](INTERVIEW.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
+Runbooks: [03-runbooks](03-runbooks/README.md). Interview notes: [INTERVIEW.md](INTERVIEW.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
 ## Remaining
 
-- `03-runbooks/`: one page per failure type, written from the drill logs
 - Run the health check from a timer and on the standby too
