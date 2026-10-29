@@ -72,7 +72,20 @@ prm2, powered off) and stopped the service's resource tree: service → GoldenGa
 Immediate fix (no file deleted): `log_archive_dest_1='LOCATION=+DATA ...'` on orcl (memory, then spfile) —
 the archiver resumed at once, CRS restarted the service tree and GoldenGate by itself. +DATA had 13.6 GB free.
 
-**Still to do (needs an approval — it deletes archived logs):** delete the logs that are applied on the
+**Closed the same evening (approved):** a second design flaw explained why nothing could be deleted —
+in a recovery catalog, **disk backups belong to the site that took them**. All backups run on the
+standby, so for the primary no log was ever "BACKED UP 1 TIMES TO DISK": RMAN refused all 479
+(`RMAN-08138`). Steps: the 51 logs with no backup anywhere backed up from prm1 (192 MB); primary
+deletion policy changed to `APPLIED ON ALL STANDBY` (the standby keeps `... BACKED UP 1 TIMES TO DISK`,
+it is where backups run); `delete archivelog all` under the policies: 480 files on prm1, 151 on stb1;
+dest 1 back to `USE_DB_RECOVERY_FILE_DEST` on both — new logs `IS_RECOVERY_DEST_FILE = YES`.
+`+FRA` free: prm1 208 MB → 14.8 GB, stb1 10.7 → 15.5 GB. Broker SUCCESS, GoldenGate running both ways.
+Note: 39 logs of 10-21 (an older incarnation, known only to the catalog, outside the 7-day recovery
+window) were deleted too; I had not checked them for a backup first.
+Open: RAC backups on the standby are still started by hand — with the new primary policy the standby is
+the only place logs wait for a backup, so its backup needs a schedule.
+
+Original plan, for the record: delete the logs that are applied on the
 standby and backed up (via the catalog), then set dest 1 back to `USE_DB_RECOVERY_FILE_DEST` on both
 databases, so the FRA manages and recycles them. The health check now looks at the disk group and at
 unmanaged logs ([`check_backup_health.sh`](04-scripts/check_backup_health.sh)): `CRIT fra disk group
