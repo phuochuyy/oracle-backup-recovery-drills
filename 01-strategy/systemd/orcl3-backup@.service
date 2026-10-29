@@ -1,5 +1,7 @@
 [Unit]
 Description=RMAN backup of orcl3 (%i)
+# a run missed while the VM was off (Persistent=true) is caught up at boot: wait for the database
+After=oracle-db.service
 
 [Service]
 Type=oneshot

@@ -1,0 +1,799 @@
+13:24:30 ACCOUNTS row 1234 is in file #26 block 9144 (/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf)
+13:24:31 overwrite block 9144 with zeros (dd, direct IO) and flush the buffer cache
+
+System altered.
+
+13:24:31 read the row
+ORA-01578: ORACLE data block corrupted (file # 26, block # 9144)
+ORA-01110: data file 26:
+13:24:33 find all corrupt blocks: VALIDATE DATAFILE
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Thu Oct 29 13:24:33 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> validate datafile 26;
+Starting validate at 29-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=81 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=350 device type=DISK
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+input datafile file number=00026 name=/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:03
+List of Datafiles
+=================
+File Status Marked Corrupt Empty Blocks Blocks Examined High SCN
+---- ------ -------------- ------------ --------------- ----------
+26   FAILED 0              35225        65536           32649514  
+  File Name: /u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_og1tb4oh_.dbf
+  Block Type Blocks Failing Blocks Processed
+  ---------- -------------- ----------------
+  Data       0              18108           
+  Index      0              3060            
+  Other      1              9143            
+
+validate found one or more corrupt blocks
+See trace file /u01/app/oracle/diag/rdbms/orcl3/ORCL3/trace/ORCL3_ora_51075.trc for details
+Finished validate at 29-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+
+     FILE#     BLOCK#	  BLOCKS CORRUPTIO
+---------- ---------- ---------- ---------
+	26	 9144	       1 ALL ZERO
+
+13:24:38 repair: RECOVER CORRUPTION LIST (block media recovery from the level 0/1 backups + archived logs)
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Thu Oct 29 13:24:38 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> recover corruption list;
+Starting recover at 29-OCT-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=82 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=237 device type=DISK
+searching flashback logs for block images until SCN 31961720
+finished flashback log search, restored 1 blocks
+
+starting media recovery
+
+archived log for thread 1 with sequence 439 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_439_og4f43dj_.arc
+archived log for thread 1 with sequence 440 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_440_og4ffjwq_.arc
+archived log for thread 1 with sequence 441 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_441_og5nx45m_.arc
+archived log for thread 1 with sequence 442 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_442_og5oh3jf_.arc
+archived log for thread 1 with sequence 443 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_443_og5pgs6v_.arc
+archived log for thread 1 with sequence 444 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_444_og5r4mwq_.arc
+archived log for thread 1 with sequence 445 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_445_og5r5513_.arc
+archived log for thread 1 with sequence 446 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_446_og5r71yq_.arc
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=338
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_0m1cqjvh_22_1_1
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=337
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_0l1cqjvh_21_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_0m1cqjvh_22_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=339
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_11bfqk2r_33_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_11bfqk2r_33_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=340
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_13rfqk3b_35_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_13rfqk3b_35_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=341
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1c2gqk3i_44_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_1c2gqk3i_44_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=342
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1eq4rkoa_46_1_1
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_0l1cqjvh_21_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:05
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=343
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1hcdrl0s_49_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_1eq4rkoa_46_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+recovery status time_needed 2026-10-28 01:11:17
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_1hcdrl0s_49_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=344
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1gcdrl0s_48_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_337_og5soff0_.arc RECID=892 STAMP=1247923489
+recovery status time_needed 2026-10-28 01:11:25
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_1gcdrl0s_48_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=345
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_1ki5tmp2_52_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_338_og5sofdn_.arc RECID=888 STAMP=1247923485
+recovery status time_needed 2026-10-28 01:12:16
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_339_og5sognm_.arc RECID=889 STAMP=1247923486
+recovery status time_needed 2026-10-28 01:14:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_340_og5sohw2_.arc RECID=890 STAMP=1247923487
+recovery status time_needed 2026-10-28 01:14:18
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_1ki5tmp2_52_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:02
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=346
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2026tmpi_64_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_341_og5sok12_.arc RECID=891 STAMP=1247923489
+recovery status time_needed 2026-10-28 01:14:25
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2026tmpi_64_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:00
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=347
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=348
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=349
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=350
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_28t392nd_72_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_342_og5sol2o_.arc RECID=894 STAMP=1247923490
+recovery status time_needed 2026-10-28 01:25:28
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_343_og5sol3c_.arc RECID=893 STAMP=1247923490
+recovery status time_needed 2026-10-28 01:26:22
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_344_og5som5f_.arc RECID=895 STAMP=1247923491
+recovery status time_needed 2026-10-28 01:30:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_345_og5son7r_.arc RECID=896 STAMP=1247923494
+recovery status time_needed 2026-10-28 02:00:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_346_og5sopq5_.arc RECID=897 STAMP=1247923494
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=351
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=352
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=353
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_27t392nd_71_1_1
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_28t392nd_72_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:12
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=354
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=355
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=356
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=357
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=358
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=359
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=360
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=361
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=362
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=363
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=364
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=365
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=366
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=367
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=368
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=369
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=370
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2b3sa4fi_75_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261028_27t392nd_71_1_1 tag=ARCH
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:10
+recovery status time_needed 2026-10-28 02:00:18
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2b3sa4fi_75_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:03
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=371
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=372
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=373
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=374
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=375
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=376
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=377
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=378
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=379
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=380
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=381
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=382
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=383
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=384
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=385
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=386
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=387
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=388
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=389
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=390
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=391
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=392
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2c3sa4fj_76_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_347_og5sopwm_.arc RECID=899 STAMP=1247923499
+recovery status time_needed 2026-10-28 14:01:39
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_348_og5sopsp_.arc RECID=901 STAMP=1247923502
+recovery status time_needed 2026-10-28 14:02:53
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2c3sa4fj_76_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=393
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=394
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=395
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=396
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2d4sa4fk_77_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_349_og5sopvb_.arc RECID=900 STAMP=1247923499
+recovery status time_needed 2026-10-28 14:05:05
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_350_og5sopxr_.arc RECID=898 STAMP=1247923495
+recovery status time_needed 2026-10-28 14:05:17
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2d4sa4fk_77_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=397
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2fbkc67r_79_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_351_og5sovhg_.arc RECID=921 STAMP=1247923509
+recovery status time_needed 2026-10-28 14:11:14
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_352_og5sovls_.arc RECID=920 STAMP=1247923509
+recovery status time_needed 2026-10-28 14:12:11
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2fbkc67r_79_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=398
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2hhce801_81_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_353_og5sovo6_.arc RECID=902 STAMP=1247923503
+recovery status time_needed 2026-10-28 14:30:04
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_354_og5sp2wz_.arc RECID=907 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:31:44
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2hhce801_81_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=399
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2jq4g9oa_83_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_355_og5sp3b0_.arc RECID=910 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:31:48
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_356_og5sp2xt_.arc RECID=908 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:26
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2jq4g9oa_83_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=400
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2l2thbgi_85_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_357_og5sp3j6_.arc RECID=914 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:26
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_358_og5sp3lv_.arc RECID=917 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:26
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2l2thbgi_85_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=401
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2naljd8q_87_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_359_og5sp3g2_.arc RECID=912 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:26
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_360_og5sp3h8_.arc RECID=913 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:26
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2naljd8q_87_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=402
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=403
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=404
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2oaljd8q_88_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_361_og5sp3dx_.arc RECID=911 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:27
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_362_og5sp2z4_.arc RECID=903 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:36:57
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2oaljd8q_88_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:02
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=405
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2pbljd8r_89_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_363_og5sp393_.arc RECID=909 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:37:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_364_og5sp35f_.arc RECID=906 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:37:04
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2pbljd8r_89_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=406
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2rkdlf14_91_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_365_og5sp2ts_.arc RECID=915 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:37:07
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_366_og5sp2s7_.arc RECID=919 STAMP=1247923508
+recovery status time_needed 2026-10-28 14:37:10
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2rkdlf14_91_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=407
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2tq5ngpa_93_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_367_og5sp30g_.arc RECID=904 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:37:14
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_368_og5sp34d_.arc RECID=905 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:37:17
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2tq5ngpa_93_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=408
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_303uoihj_96_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_369_og5sp2vc_.arc RECID=916 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:38:50
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_370_og5sp2rj_.arc RECID=918 STAMP=1247923507
+recovery status time_needed 2026-10-28 14:42:36
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_303uoihj_96_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=409
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_2v3uoihj_95_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_371_og5sp6gf_.arc RECID=934 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:37
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_372_og5sp6h9_.arc RECID=935 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:37
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_2v3uoihj_95_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=410
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_32dmqk9t_98_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_373_og5sp6cx_.arc RECID=932 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:37
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_374_og5sp6dt_.arc RECID=933 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:37
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_32dmqk9t_98_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=411
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_34jesm23_100_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_375_og5sp67w_.arc RECID=928 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:37
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_376_og5sp6j4_.arc RECID=936 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:42:38
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_34jesm23_100_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=412
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_36s6unqc_102_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_377_og5sp64g_.arc RECID=923 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_378_og5sp6k3_.arc RECID=937 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:00
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_36s6unqc_102_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=413
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_386vvpim_104_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_379_og5sp6l0_.arc RECID=938 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_380_og5sp6nl_.arc RECID=940 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:00
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_386vvpim_104_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:02
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=414
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=415
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_3aq75ura_106_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_381_og5sp69z_.arc RECID=930 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_382_og5sp6c1_.arc RECID=931 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_383_og5sp6lw_.arc RECID=939 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:43:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_384_og5sp62x_.arc RECID=942 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:49:47
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_385_og5sp667_.arc RECID=927 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:49:59
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_3aq75ura_106_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:04
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=416
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_3bq75ura_107_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_386_og5sp6ol_.arc RECID=941 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:50:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_387_og5sp63y_.arc RECID=922 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:51:05
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_3bq75ura_107_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=417
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_3d4070jk_109_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_388_og5sp64w_.arc RECID=924 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:51:17
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_389_og5sp68z_.arc RECID=929 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:51:23
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_3d4070jk_109_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=418
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261028_3fao82bq_111_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_390_og5sp62c_.arc RECID=943 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:53:11
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_391_og5sp65c_.arc RECID=925 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:53:23
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261028_3fao82bq_111_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=419
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261029_3higa442_113_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_392_og5sp65s_.arc RECID=926 STAMP=1247923510
+recovery status time_needed 2026-10-28 14:53:30
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_393_og5sp798_.arc RECID=947 STAMP=1247923511
+recovery status time_needed 2026-10-28 14:58:15
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261029_3higa442_113_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=420
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=421
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261029_3js8c5sc_115_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_394_og5sp7c1_.arc RECID=945 STAMP=1247923511
+recovery status time_needed 2026-10-28 14:58:27
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_395_og5sp7ch_.arc RECID=946 STAMP=1247923511
+recovery status time_needed 2026-10-28 14:58:30
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_396_og5sp7bn_.arc RECID=944 STAMP=1247923511
+recovery status time_needed 2026-10-28 15:00:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_397_og5sp8dj_.arc RECID=948 STAMP=1247923513
+recovery status time_needed 2026-10-28 15:30:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_398_og5sp9k8_.arc RECID=949 STAMP=1247923513
+recovery status time_needed 2026-10-28 16:00:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_399_og5spbmh_.arc RECID=950 STAMP=1247923515
+recovery status time_needed 2026-10-28 16:30:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_400_og5spctn_.arc RECID=951 STAMP=1247923516
+recovery status time_needed 2026-10-28 17:00:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_401_og5spdxh_.arc RECID=952 STAMP=1247923517
+recovery status time_needed 2026-10-28 17:19:33
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_402_og5spg1q_.arc RECID=953 STAMP=1247923518
+recovery status time_needed 2026-10-28 17:19:33
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_403_og5spg0l_.arc RECID=955 STAMP=1247923518
+recovery status time_needed 2026-10-28 17:19:34
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261029_3js8c5sc_115_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:10
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=422
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=423
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261029_3ks8c5sc_116_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_404_og5spg25_.arc RECID=954 STAMP=1247923518
+recovery status time_needed 2026-10-28 17:19:34
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_405_og5sph31_.arc RECID=956 STAMP=1247923519
+recovery status time_needed 2026-10-28 17:30:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_406_og5spj5y_.arc RECID=957 STAMP=1247923520
+recovery status time_needed 2026-10-28 18:00:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_407_og5spk84_.arc RECID=958 STAMP=1247923522
+recovery status time_needed 2026-10-28 18:30:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_408_og5splk0_.arc RECID=959 STAMP=1247923522
+recovery status time_needed 2026-10-28 18:48:10
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_409_og5spmn1_.arc RECID=960 STAMP=1247923523
+recovery status time_needed 2026-10-28 19:00:02
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261029_3ks8c5sc_116_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:06
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=424
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=425
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=426
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=427
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=428
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=429
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=430
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=431
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=432
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=433
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261029_3otemg2d_120_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_410_og5spnpm_.arc RECID=961 STAMP=1247923525
+recovery status time_needed 2026-10-28 19:30:04
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_411_og5spos8_.arc RECID=962 STAMP=1247923526
+recovery status time_needed 2026-10-28 20:00:02
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261029_3otemg2d_120_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_2: starting archived log restore to default destination
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=434
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=435
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=436
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=437
+channel ORA_DISK_2: restoring archived log
+archived log thread=1 sequence=438
+channel ORA_DISK_2: reading from backup piece /u02/backup/orcl3/ORCL3_20261029_3mqemg2a_118_1_1
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_412_og5sppw8_.arc RECID=963 STAMP=1247923527
+recovery status time_needed 2026-10-28 20:30:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_413_og5spr03_.arc RECID=964 STAMP=1247923528
+recovery status time_needed 2026-10-28 21:00:05
+channel ORA_DISK_2: piece handle=/u02/backup/orcl3/ORCL3_20261029_3mqemg2a_118_1_1 tag=ARCH
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_414_og5sps3o_.arc RECID=965 STAMP=1247923529
+recovery status time_needed 2026-10-28 22:07:26
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_415_og5sps29_.arc RECID=966 STAMP=1247923532
+recovery status time_needed 2026-10-28 22:23:50
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_416_og5spxk9_.arc RECID=967 STAMP=1247923533
+recovery status time_needed 2026-10-28 22:30:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_417_og5spyly_.arc RECID=968 STAMP=1247923535
+recovery status time_needed 2026-10-28 23:00:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_418_og5spzog_.arc RECID=969 STAMP=1247923536
+recovery status time_needed 2026-10-28 23:30:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_419_og5sq0qy_.arc RECID=970 STAMP=1247923537
+recovery status time_needed 2026-10-29 00:00:02
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_420_og5sq1tv_.arc RECID=972 STAMP=1247923547
+recovery status time_needed 2026-10-29 00:23:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_421_og5sq1w7_.arc RECID=971 STAMP=1247923547
+recovery status time_needed 2026-10-29 00:26:15
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_422_og5sqcyk_.arc RECID=974 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:26:17
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_423_og5sqd0o_.arc RECID=973 STAMP=1247923548
+recovery status time_needed 2026-10-29 00:30:03
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_424_og5sqkk5_.arc RECID=983 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:41:14
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_425_og5sqkqr_.arc RECID=980 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:41:19
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_426_og5sqkld_.arc RECID=982 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:42:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_427_og5sqklt_.arc RECID=975 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:42:11
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_428_og5sqkrw_.arc RECID=981 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:42:11
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_429_og5sqkmo_.arc RECID=977 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:42:27
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_430_og5sqkn7_.arc RECID=978 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:42:42
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_431_og5sqkm8_.arc RECID=976 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:42:54
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_432_og5sqknw_.arc RECID=979 STAMP=1247923553
+recovery status time_needed 2026-10-29 00:43:00
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_433_og5sqkjn_.arc RECID=984 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:43:54
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_434_og5sqls9_.arc RECID=988 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:43:56
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_435_og5sqlqp_.arc RECID=987 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:44:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_436_og5sqlq8_.arc RECID=986 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:44:10
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_437_og5sqlps_.arc RECID=985 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:44:20
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/u02/oradata/FRA/ORCL3/archivelog/2026_10_29/o1_mf_1_438_og5sqlos_.arc RECID=989 STAMP=1247923554
+recovery status time_needed 2026-10-29 00:44:32
+recovery status time_needed 2026-10-29 00:44:35
+recovery status time_needed 2026-10-29 00:49:35
+media recovery complete, elapsed time: 00:01:14
+Finished recover at 29-OCT-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+13:26:24 verify: PASS (5 tables, counts and checksums match)
+13:26:24 RTO 111 s (block media recovery, PDB stayed open)

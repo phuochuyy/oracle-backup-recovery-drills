@@ -23,13 +23,17 @@ line OK role "$(q "select db_unique_name || ' ' || database_role || ' ' || open_
 #    incremental_change# = creation_change# (all blocks): RMAN restores from it (RESTORE ... PREVIEW),
 #    so it counts as a base. Files never backed up count as 9999 h.
 if [ "$role" = PRIMARY ]; then
+  # a file unchanged since its last backup (checkpoint SCN not moved: PDB$SEED, read-only tablespaces) is
+  # skipped by BACKUP OPTIMIZATION and needs no new backup — counted as current (it made PDB$SEED's files
+  # CRIT 36 h after the level 0 on 2026-10-29)
   for k in "base:(b.incremental_level = 0 or b.incremental_change# <= b.creation_change#):$L0_MAX_H" \
            "L0/L1:b.incremental_level in (0, 1):$L1_MAX_H"; do
     IFS=: read -r name cond max <<< "$k"
     read -r h f <<< "$(q "select to_char(h, 'FM99990.0'), file# from (
-        select nvl((sysdate - max(b.completion_time)) * 24, 9999) h, d.file#
+        select case when d.checkpoint_change# <= max(b.checkpoint_change#) then 0
+                    else nvl((sysdate - max(b.completion_time)) * 24, 9999) end h, d.file#
           from v\$datafile d left join v\$backup_datafile b on b.file# = d.file# and $cond
-         group by d.file# order by 1 desc, 2) where rownum = 1;")"
+         group by d.file#, d.checkpoint_change# order by 1 desc, 2) where rownum = 1;")"
     awk -v h="$h" -v m="$max" 'BEGIN { exit !(h <= m) }' && s=OK || s=CRIT
     line $s "backup $name" "oldest file #$f: ${h} h ago (max $max h)"
   done
@@ -42,6 +46,16 @@ fi
 f=$(q "select count(*) from v\$rman_status where start_time > sysdate - 1 and status like 'FAILED%' and row_level = 0;")
 [ "$f" -eq 0 ] && line OK "rman failures 24h" 0 || line WARN "rman failures 24h" "$f (see V\$RMAN_STATUS)"
 
+# 2b. the last run of each systemd backup job (where the timers exist): a job that never reached the
+#     database leaves nothing in V$RMAN_STATUS — the 12:02 catch-up run on 2026-10-29 failed with ORA-01034
+#     at boot while check 2 said 0 failures
+for m in 0 1 arch; do
+  r=$(systemctl show "orcl3-backup@$m.service" -p Result --value 2>/dev/null) || continue
+  t=$(systemctl show "orcl3-backup@$m.service" -p ExecMainExitTimestamp --value 2>/dev/null)
+  [ -z "$t" ] && continue                      # never ran since boot
+  [ "$r" = success ] && line OK "backup job $m" "last run $t: success" || line CRIT "backup job $m" "last run $t: $r (see /u02/backup/logs)"
+done
+
 # 3. FRA usage
 p=$(q "select round(space_used / space_limit * 100) from v\$recovery_file_dest;")
 r=$(q "select round(space_reclaimable / space_limit * 100) from v\$recovery_file_dest;")
@@ -50,12 +64,17 @@ line $s "fra used" "${p} % (reclaimable ${r} %)"
 
 # 4. every online redo member exists on disk, every group has >= 2 members
 missing=0
+asm=0
 while read -r g m; do
+  # ASM members (+DG/...) cannot be tested with -f; V$LOGFILE status is all there is from here
+  case $m in +*) asm=$((asm + 1)); continue ;; esac
   [ -f "$m" ] || { line CRIT "redo member" "group $g: $m MISSING on disk"; missing=$((missing + 1)); }
 done < <(q "select group# || ' ' || member from v\$logfile where type = 'ONLINE';")
 single=$(q "select listagg(group#, ',') from (select group# from v\$logfile where type = 'ONLINE' group by group# having count(*) < 2);")
+# sqlplus may print an empty listagg as "(null)" (SET NULL in a login script) — that is not a finding
+[ "$single" = "(null)" ] && single=""
 [ -n "$single" ] && line WARN "redo multiplexing" "groups with one member: $single"
-[ "$missing" -eq 0 ] && line OK "redo members" "$(q "select count(*) from v\$logfile where type = 'ONLINE';") on disk"
+[ "$missing" -eq 0 ] && line OK "redo members" "$(q "select count(*) from v\$logfile where type = 'ONLINE';") online members$( [ $asm -gt 0 ] && echo ", $asm in ASM (not checked on disk)")"
 
 # 5. archive destinations (local + standby)
 while read -r d st err; do

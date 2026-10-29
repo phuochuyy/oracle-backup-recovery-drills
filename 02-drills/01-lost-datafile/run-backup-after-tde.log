@@ -1,0 +1,92 @@
+13:12:37 target datafile #40 +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247877461
+13:12:37 close DRILLPDB and delete the datafile from ASM (the 'failure')
+
+Pluggable database altered.
+
+13:12:39 open DRILLPDB (expect ORA-01157)
+ORA-01157: cannot identify/lock data file 40 - see DBWR trace file
+ORA-01110: data file 40: '+DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247877461'
+13:12:40 copy the standby's backup pieces of file 40 to prm1
+13:12:42 copied 2 piece(s)
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Thu Oct 29 13:12:41 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL (DBID=1769932804)
+connected to recovery catalog database
+
+RMAN> catalog start with '/u02/backup/orcl_from_stb/' noprompt;
+starting full resync of recovery catalog
+full resync complete
+searching for all files that match the pattern /u02/backup/orcl_from_stb/
+
+List of Files Unknown to the Database
+=====================================
+File Name: /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+File Name: /u02/backup/orcl_from_stb/ORCL_20261029_3akjoi74_106_1_1
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+File Name: /u02/backup/orcl_from_stb/ORCL_20261029_3akjoi74_106_1_1
+
+
+RMAN> restore datafile 40;
+Starting restore at 29-OCT-26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=102 instance=orcl1 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=364 instance=orcl1 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00040 to +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247877461
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl_from_stb/ORCL_20261028_2jdesm1t_83_1_1 tag=STB_L0
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:07
+Finished restore at 29-OCT-26
+
+
+RMAN> recover datafile 40;
+Starting recover at 29-OCT-26
+starting full resync of recovery catalog
+full resync complete
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting incremental datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+destination for restore of datafile 00040: +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247922771
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl_from_stb/ORCL_20261029_3akjoi74_106_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl_from_stb/ORCL_20261029_3akjoi74_106_1_1 tag=STB_L1
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+
+starting media recovery
+media recovery failed
+RMAN Command Id : 2026-10-29T13:12:41
+RMAN Command Id : 2026-10-29T13:12:41
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 10/29/2026 13:13:04
+ORA-00283: recovery session canceled due to errors
+RMAN-11003: failure during parse/execution of SQL statement: alter database recover
+ if needed start partial
+ORA-00283: recovery session canceled due to errors
+ORA-01122: database file 40 failed verification check
+ORA-01110: data file 40: '+DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247922771'
+ORA-01207: file is more recent than the control file
+Help: https://docs.oracle.com/error-help/db/ora-00283/
+RMAN Client Diagnostic Trace file : /u01/app/oracle/diag/clients/user_oracle/RMAN_2551368290_116/trace/ora_rman_38189_0.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/orcl/orcl1/trace/orcl1_ora_38260.trc
+RMAN Server Diagnostic Trace file : /u01/app/oracle/diag/rdbms/orcl/orcl1/trace/orcl1_ora_38237.trc
+
+
+RMAN> 
+
+Recovery Manager complete.
