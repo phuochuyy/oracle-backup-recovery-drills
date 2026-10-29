@@ -61,6 +61,20 @@ p=$(q "select round(space_used / space_limit * 100) from v\$recovery_file_dest;"
 r=$(q "select round(space_reclaimable / space_limit * 100) from v\$recovery_file_dest;")
 s=OK; [ "$p" -ge "$FRA_WARN" ] && s=WARN; [ "$p" -ge "$FRA_CRIT" ] && s=CRIT
 line $s "fra used" "${p} % (reclaimable ${r} %)"
+# V$RECOVERY_FILE_DEST only counts files the FRA manages. Archived logs written with LOCATION=+FRA instead
+# of USE_DB_RECOVERY_FILE_DEST are not counted and never auto-deleted: on 2026-10-29 orcl showed "16 %"
+# while +FRA had 208 MB of 20 GB free and the primary hung (Stuck Archiver). So check the disk group too.
+dg=$(q "select value from v\$parameter where name = 'db_recovery_file_dest';")
+case $dg in
+  +*) f=$(q "select round(free_mb / total_mb * 100) || ' ' || free_mb || ' ' || total_mb from v\$asm_diskgroup where name = upper('${dg#+}');")
+      read -r fp fm tm <<< "$f"
+      if [ -n "$fp" ]; then
+        s=OK; [ $((100 - fp)) -ge "$FRA_WARN" ] && s=WARN; [ $((100 - fp)) -ge "$FRA_CRIT" ] && s=CRIT
+        line $s "fra disk group" "$dg: $fm MB free of $tm MB"
+      fi ;;
+esac
+n=$(q "select count(*) from v\$archived_log where deleted = 'NO' and is_recovery_dest_file = 'NO' and name like '$dg%';")
+[ "${n:-0}" -gt 0 ] && line WARN "archived logs" "$n in $dg but not managed by the FRA (archive dest not USE_DB_RECOVERY_FILE_DEST): never auto-deleted"
 
 # 4. every online redo member exists on disk, every group has >= 2 members
 missing=0
