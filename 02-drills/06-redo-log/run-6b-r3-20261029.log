@@ -1,0 +1,43 @@
+21:21:44 group 13 (INACTIVE, archived): delete both members: /u02/oradata/ORCL3/redo/redo13.log /u02/redo2/redo13b.log
+21:21:44 health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #19: 44.2 h ago (max 170 h)
+OK   backup L0/L1           oldest file #22: 0.1 h ago (max 26 h)
+OK   backup archivelog      last 0.1 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job 1           last run Thu 2026-10-29 21:13:31 +07: success
+OK   backup job arch        last run Thu 2026-10-29 21:00:05 +07: success
+OK   fra used               67 % (reclaimable 32 %)
+CRIT redo member            group 13: /u02/oradata/ORCL3/redo/redo13.log MISSING on disk
+CRIT redo member            group 13: /u02/redo2/redo13b.log MISSING on disk
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+21:21:45 the database itself does not notice:
+13 /u02/oradata/ORCL3/redo/redo13.log OK
+13 /u02/redo2/redo13b.log OK
+21:21:45 repair: re-check status, CLEAR LOGFILE GROUP 13 (re-creates both members)
+-rw-r----- 1 oracle oinstall 209715712 Oct 29 21:21 /u02/oradata/ORCL3/redo/redo13.log
+-rw-r----- 1 oracle oinstall 209715712 Oct 29 21:21 /u02/redo2/redo13b.log
+21:21:48 switch through all groups, then health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #19: 44.2 h ago (max 170 h)
+OK   backup L0/L1           oldest file #22: 0.1 h ago (max 26 h)
+OK   backup archivelog      last 0.1 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job 1           last run Thu 2026-10-29 21:13:31 +07: success
+OK   backup job arch        last run Thu 2026-10-29 21:00:05 +07: success
+OK   fra used               67 % (reclaimable 32 %)
+OK   redo members           12 online members
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+21:21:49 alert log since the drill:
+      1 alter database clear logfile group 13
+      1 Clearing online log 13 of thread 1 sequence number 474
+      1 Completed: alter database clear logfile group 13
+      4 ORA-00312: online log 13 thread 1: '/u02/oradata/ORCL3/redo/redo13.log'
+      6 ORA-00312: online log 13 thread 1: '/u02/redo2/redo13b.log'
+      5 ORA-00313: open failed for members of log group 13 of thread 1
+      9 ORA-27037: unable to obtain file status
+21:21:49 RTO 4 s (from detection to health OK)

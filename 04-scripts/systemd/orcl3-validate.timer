@@ -1,0 +1,10 @@
+[Unit]
+Description=orcl3: restore validate every Sunday, after the level 0 (03:00)
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00:00
+Persistent=false
+Unit=orcl3-validate.service
+
+[Install]
+WantedBy=timers.target
