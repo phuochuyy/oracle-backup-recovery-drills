@@ -21,3 +21,7 @@ failed with `ORA-02250` on the NOT NULL constraints (also `BIN$`); fixed.
 
 My first version used `VERSIONS BETWEEN TIMESTAMP` with a timestamp taken 2 s before the update and
 found **0 rows**: timestamps are mapped to SCNs with ~3 s granularity. Use SCNs for anything precise.
+
+## Re-run 2026-10-29
+
+Same steps and results, each flashback < 1 s, checksums PASS ([`run-rerun-20261029.log`](run-rerun-20261029.log)).

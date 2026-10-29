@@ -18,3 +18,31 @@ Logs: [`run-service.log`](run-service.log), [`run-backup.log`](run-backup.log).
 - Backups taken on the standby restore the primary (same DBID). Without a recovery catalog the
   primary would not even know they exist.
 - ASM/OMF gives the restored file a new name; the control file is updated by RMAN.
+
+## Re-run after TDE (2026-10-29)
+
+Since the security lab, DRILLPDB's `BANK_DATA` is TDE-encrypted (auto-login keystores on both sites) and
+native network encryption is required on the RAC. `service` method re-run twice: **PASS**, RTO **49 s and
+45 s** ([`run-service-after-tde.log`](run-service-after-tde.log)) instead of 14 s.
+
+The RMAN work itself did not change: restore 3 s, recover 2 s, same as before. The extra time is around it:
+RMAN start alone took ~7 s on prm1 (measured with a no-catalog connect), each of the two full catalog
+resyncs ~2 s, and the standby VM was swapping ~3 GB (5 GB VM with ADG + redo apply) right after the lab
+started. Encryption is not proven to be the cause — what is proven is that the drill still works with
+encrypted datafiles: the blocks come over the network encrypted and the standby's keystore is not needed
+on the primary side.
+
+## Re-run after two FSFO failovers (2026-10-29) — the `backup` method failed first
+
+The HA/DR re-run that morning did two FSFO failovers: **two new incarnations** (RESETLOGS at 12:29 and 12:42).
+The latest level 0 of the RAC (on the standby) was from 10-28, an older incarnation; a level 1 was taken on
+the standby at 13:00. Drill `backup`: RMAN restored the old level 0, applied the new level 1, and **media
+recovery failed**: `ORA-01207: file is more recent than the control file` (ORA-01122, ORA-00283)
+([`run-backup-after-tde.log`](run-backup-after-tde.log)). DRILLPDB was left without a usable file 40 —
+recovered at once with `RESTORE DATAFILE 40 FROM SERVICE orcl_stb` + `RECOVER` (5 s), checksums PASS.
+
+Proof of the cause: a level 0 of file 40 alone on the standby (current incarnation), then the same drill:
+**PASS, RTO 20 s** ([`run-backup-after-failovers-new-l0.log`](run-backup-after-failovers-new-l0.log)).
+
+**Rule:** after every RESETLOGS — and a Data Guard failover is one — take a new level 0 before relying on
+backups again; until then `FROM SERVICE` (standby) is the recovery path.
