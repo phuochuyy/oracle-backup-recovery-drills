@@ -91,3 +91,17 @@ databases, so the FRA manages and recycles them. The health check now looks at t
 unmanaged logs ([`check_backup_health.sh`](04-scripts/check_backup_health.sh)): `CRIT fra disk group
 +FRA: 208 MB free of 20480 MB`, `WARN archived logs 429 in +FRA but not managed by the FRA`.
 
+**Consequence found 40 min later — the cleanup broke GoldenGate capture.** At 19:38 Extract EXTA abended:
+`ORA-01292: LogMiner for upstream capture cannot find log file`. The capture (`OGG$CAP_EXTA`, per-PDB in
+ORCLPDB2) still needed thread 1 sequences 14–26 from its restart SCN; `DBA_REGISTERED_ARCHIVED_LOG` had them
+as `PURGEABLE = NO`, yet `delete archivelog all` deleted 14–23 and reported **0 `RMAN-08137`** ("needed for
+upstream capture") — RMAN in the root did not protect the logs of a capture that lives in a PDB.
+Repair: sequences 14–22 restored from the standby's backups (`SET ARCHIVELOG DESTINATION`), 23 copied
+from the standby's FRA, all copied to prm1 and `CATALOG START WITH` → capture attached again. A second
+abend followed: `ORA-04036` — the instance was at its PGA limit (2,167 MB of 2 GB, ~200 processes) and the
+catch-up needed more → `pga_aggregate_limit` 3G on both sites; Extract caught up, rows identical on both
+sides. The restored files stay in `/u02/arch_restore` until the capture's checkpoint passes sequence 23.
+
+**Rule:** before deleting archived logs on a database with GoldenGate, compare with the capture's
+`REQUIRED_CHECKPOINT_SCN` (in the PDB for per-PDB capture) — do not rely on RMAN-08137 alone.
+
