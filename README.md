@@ -54,3 +54,27 @@ Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.m
   encrypted: its backups are useless on another host without the keystore. The keystore has an off-host
   copy and a tested restore ([security lab, 02-tde](https://github.com/phuochuyy/oracle-security-compliance-lab/blob/main/02-tde/README.md)),
   but it is not part of this repo's backup schedule or runbooks yet. Drill 1a re-run with TDE: PASS
+
+## Incident 2026-10-29 17:19 — the RAC primary hung on a full `+FRA`
+
+During the security re-run, GoldenGate GG_A stopped. Cause, from the CRS trace: `ora.orcl.db` changed to
+**"Stuck Archiver"** at 17:19:38, CRS could not fail the `ogg_a` service over (its other instance is on
+prm2, powered off) and stopped the service's resource tree: service → GoldenGate → DBFS.
+
+- `+FRA`: **208 MB free of 20 GB**, while `V$RECOVERY_FILE_DEST` said 3 of 18 GB used (16 %) — the number my
+  health check and the Ansible health playbook both report as OK.
+- 14.7 GB of `+FRA/ORCL/ARCHIVELOG` were archived logs with `IS_RECOVERY_DEST_FILE = NO`: the archive
+  destination was `LOCATION=+FRA` instead of `LOCATION=USE_DB_RECOVERY_FILE_DEST`. The FRA does not count
+  such files and never deletes them, although the RMAN deletion policy (`APPLIED ON ALL STANDBY BACKED UP
+  1 TIMES`) would allow it. Region A has no archived-log housekeeping job (Region B has one).
+- The standby `orcl_stb` has the same setting: 145 unmanaged logs, 10.7 GB free (not urgent yet).
+
+Immediate fix (no file deleted): `log_archive_dest_1='LOCATION=+DATA ...'` on orcl (memory, then spfile) —
+the archiver resumed at once, CRS restarted the service tree and GoldenGate by itself. +DATA had 13.6 GB free.
+
+**Still to do (needs an approval — it deletes archived logs):** delete the logs that are applied on the
+standby and backed up (via the catalog), then set dest 1 back to `USE_DB_RECOVERY_FILE_DEST` on both
+databases, so the FRA manages and recycles them. The health check now looks at the disk group and at
+unmanaged logs ([`check_backup_health.sh`](04-scripts/check_backup_health.sh)): `CRIT fra disk group
++FRA: 208 MB free of 20480 MB`, `WARN archived logs 429 in +FRA but not managed by the FRA`.
+

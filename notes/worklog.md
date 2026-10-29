@@ -77,3 +77,10 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   `incremental_change# = creation_change#`. `RESTORE DATAFILE 30 PREVIEW` showed RMAN restores from it, so it
   counts as a base. Also sorted by the `to_char` string at first ("9.0" > "13.5").
 - **6b first run:** `set -e` + `grep` with no output, again.
+
+## 2026-10-29 — +FRA full on the RAC primary
+
+- My health check said "fra used 16 %" all day; the disk group was filling with archived logs the FRA did
+  not manage (`LOCATION=+FRA`). I had checked the FRA view only, never the disk group. Found only when
+  GoldenGate stopped and I followed the CRS trace: Stuck Archiver → service tree stopped.
+- First guess was my password change (it happened in the same minute); the CRS trace showed it was not.
