@@ -116,3 +116,31 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
 file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
 
+## Scheduled checks (2026-10-30)
+
+[`install_scheduled_checks.sh`](04-scripts/install_scheduled_checks.sh) installs two systemd timers, both
+`Persistent=false` (no catch-up at boot — the lesson of the backup that ran before the instance) and skipped
+while the instance is down ([`scheduled_check.sh`](04-scripts/scheduled_check.sh)):
+
+| Timer | Where | When | What |
+|-------|-------|------|------|
+| `lab-health.timer` | prm1, stb1, prm3 | every hour at :20 | `check_backup_health.sh`; full output to `~/health/<date>.log` |
+| `orcl3-validate.timer` | prm3 | Sunday 05:00, after the level 0 (03:00) | `validate.sh`: `RESTORE DATABASE VALIDATE` + archived logs since that level 0 |
+
+**Alerting on a change, not on a state:** a line in `~/health/alerts.log` and in the journal
+(`journalctl -t lab-health`) only when a CRIT/WARN appears or clears. Some CRITs are permanent here by design
+(Region B's deferred destination in scenario `dg-a`; backup age on the RAC primary, whose backups run on the
+standby) — an alert on every run would be noise nobody reads. Tested: first run = baseline, second run =
+no alert, a simulated change → `new CRIT …` and `cleared WARN …`. The first test failed: `comm` needs both
+state files sorted with the same collation, and my test sorted with another locale than systemd's —
+the script now sets `LC_ALL=C`. No mail server in the lab: alerts are read with `labctl`/ssh.
+
+First run of the validate service (by hand, 2026-10-30 00:22): **OK in 202 s** — the level 0 of 10-28 02:00, the level 1s and every archived log since read and checked block by block, nothing restored.
+
+The RAC is not validated on a schedule yet: its backups (on the standby) are still started by hand.
+
+**Blind spot found while setting this up:** after the three failovers of 2026-10-29 evening the RAC is in
+incarnation 21 (20:58), and its newest level 0 (13:15) belongs to incarnation 18 — a restore from backup would
+fail like drill 1b (`ORA-01207`) until a new level 0 is taken; `RESTORE FROM SERVICE` (drill 1a) still works.
+`check_backup_health.sh` checks the age of the backups, not their incarnation, so it reports OK.
+
