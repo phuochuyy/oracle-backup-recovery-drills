@@ -1,0 +1,8 @@
+[Unit]
+Description=orcl3: RESTORE DATABASE / ARCHIVELOG VALIDATE of the latest backups
+After=oracle-db.service
+
+[Service]
+Type=oneshot
+User=oracle
+ExecStart=/bin/bash /home/oracle/brlab/04-scripts/scheduled_check.sh validate
