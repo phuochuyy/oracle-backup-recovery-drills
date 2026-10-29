@@ -28,7 +28,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 | # | Failure | Where | Recovery | RTO | Data |
 |---|---------|-------|----------|-----|------|
 | 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s (45–49 s re-run with TDE, restore itself unchanged) | PASS |
-| 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s | PASS |
+| 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s (re-run 29/10: **failed** after 2 failovers — old-incarnation level 0, `ORA-01207`; PASS in 20 s after a new level 0) | PASS |
 | 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s | PASS |
 | 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
 | 3 | [Corrupted block](02-drills/03-block-corruption/) | orcl3, filesystem | `VALIDATE` + `RECOVER CORRUPTION LIST`, PDB stays open | 20 s | PASS |
@@ -42,7 +42,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 | 6a | [One redo member lost](02-drills/06-redo-log/) | orcl3 (primary, GG source) | drop + add member; **GoldenGate Extract was down 2.5 min** | 0 s DB | PASS |
 | 6b | [Whole redo group lost](02-drills/06-redo-log/) | orcl3 | found by health check, `CLEAR LOGFILE` (inactive, archived) | 5 s | PASS |
 
-Backups of the RAC run on the **standby** (offload) and are registered in a **recovery catalog**
+Backups of the RAC run on the **standby** (offload, started by hand — no timer for the RAC) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
 
 Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
