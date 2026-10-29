@@ -105,3 +105,14 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 **Rule:** before deleting archived logs on a database with GoldenGate, compare with the capture's
 `REQUIRED_CHECKPOINT_SCN` (in the PDB for per-PDB capture) — do not rely on RMAN-08137 alone.
 
+## Quick re-check 2026-10-29 21:1x (after the cleanup and the password rotation)
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 25 s | [`run-service-r3-20261029.log`](02-drills/01-lost-datafile/run-service-r3-20261029.log) |
+| 2 Flashback Drop / Table | PASS, same steps, 0 ORA- lines | [`run-r3-20261029.log`](02-drills/02-logical-errors/run-r3-20261029.log) |
+| 6b whole redo group lost | PASS, 4 s from detection to OK | [`run-6b-r3-20261029.log`](02-drills/06-redo-log/run-6b-r3-20261029.log) |
+
+The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
+file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
+
