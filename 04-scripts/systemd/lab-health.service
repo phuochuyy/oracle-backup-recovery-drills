@@ -1,0 +1,8 @@
+[Unit]
+Description=Lab health check (check_backup_health.sh), alerts on change only
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=oracle
+ExecStart=/bin/bash /home/oracle/brlab/04-scripts/scheduled_check.sh health

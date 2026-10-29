@@ -1,0 +1,11 @@
+[Unit]
+Description=Lab health check every hour
+
+[Timer]
+OnCalendar=*-*-* *:20:00
+# no catch-up at boot: a run missed while the VM was off is not worth a check before the database is open
+Persistent=false
+Unit=lab-health.service
+
+[Install]
+WantedBy=timers.target
