@@ -33,3 +33,7 @@ v=$($P "cd ~/brlab; BANKDB_DIR=~/perflab/01-setup/bankdb ./04-scripts/verify_dri
 say "verify: $v"
 say "RTO $(printf '%.0f' $(echo "$t1 - $t0" | bc)) s (RECOVER TABLE + copy back)"
 $P "du -sh /u02/backup/aux 2>/dev/null; ls /u02/backup/aux | head"
+# the auxiliary instance's files stay behind (1.6 GB) and its datafiles were written into the VM disk:
+# on 2026-10-29 the host disk went from 9.9 to 3.5 GB free. Remove them and give the space back (discard).
+ssh -o BatchMode=yes root@prm3 "rm -rf /u02/backup/aux/*; fstrim /u02/oradata; fstrim /" | tee -a "$out"
+say "aux files removed, VM disk trimmed"

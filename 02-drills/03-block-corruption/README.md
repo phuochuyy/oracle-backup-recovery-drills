@@ -19,3 +19,10 @@ overwritten with zeros (`dd`, then flush buffer cache). Reading the row:
   `dd` created a new 75 MB file instead of hitting the datafile — nothing was damaged, the file was removed
   ([first attempt](run-first-attempt.log)). The script now refuses to run `dd` unless the target exists and
   is a `.dbf`, and stops if reading the row does *not* fail.
+
+## Re-run 2026-10-29
+
+PASS, PDB open the whole time, but **RTO 111 s instead of 20 s**: RMAN restored the block from the level 0
+(2026-10-28) and applied **110 archived logs** (12 in the first run) — the level 1 taken at 12:59 that day
+was not used ([`run-rerun-20261029.log`](run-rerun-20261029.log)). Block media recovery time grows with the
+age of the level 0, not of the latest backup.

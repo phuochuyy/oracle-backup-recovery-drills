@@ -21,3 +21,9 @@ exists (empty), hence the remap; the rows are copied back with a direct-path ins
 - The auxiliary destination needs room for SYSTEM/SYSAUX/UNDO of the CDB and the PDB plus the table's
   tablespace. RMAN removed the auxiliary datafiles but left its **8 online redo logs (1.6 GB)** behind —
   clean the auxiliary destination afterwards.
+
+## Re-run 2026-10-29
+
+PASS, RTO 253 s ([`run-rerun-20261029.log`](run-rerun-20261029.log)). The auxiliary instance wrote ~6 GB into the
+prm3 VM disk and left 1.6 GB behind: host disk 9.9 → **3.5 GB free (99 %)**. Removed and trimmed by hand
+(back to 12 GB); `drill.sh` now does it at the end.

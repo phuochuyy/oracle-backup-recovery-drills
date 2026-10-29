@@ -49,3 +49,8 @@ The last two rows were not run on orcl3 (it is a primary with a standby and Gold
   ([first attempt](run-6b-first-attempt.log)). Same bug class as in drill 3 and the perf lab.
 - On Linux, `rm` of an open file does not stop the writer — a real disk failure would surface as I/O errors
   in LGWR instead; the effect on readers that open by name (LogMiner, ARCn, RMAN) is the same.
+
+## Re-run 2026-10-29 (6b)
+
+The health check found both missing members (CRIT), `CLEAR LOGFILE` of the inactive, archived group, OK again
+after **6 s**; GoldenGate Extract kept running ([`run-6b-rerun-20261029.log`](run-6b-rerun-20261029.log)).

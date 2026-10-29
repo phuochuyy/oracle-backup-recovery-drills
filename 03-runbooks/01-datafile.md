@@ -37,6 +37,10 @@ ALTER PLUGGABLE DATABASE ALL OPEN;
 
 `select count(*) from v$recover_file;` = 0, application data check, `check_backup_health.sh`.
 
+**After a failover or any `OPEN RESETLOGS`:** the newest level 0 belongs to the old incarnation. Restoring it
+and applying a level 1 of the new incarnation failed with `ORA-01207` (2026-10-29). Take a new level 0
+first; until then restore `FROM SERVICE` the standby.
+
 ## Traps I hit
 
 - Backups taken **on the standby** restore the primary (same DBID), but the primary only sees them through

@@ -15,6 +15,13 @@ case $mode in
   arch) cmd="backup archivelog all not backed up 1 times tag 'ARCH';" ;;
   *)    echo "mode must be 0, 1 or arch"; exit 2 ;;
 esac
+# Persistent timers catch up a missed run right at boot: on 2026-10-29 the level 1 started at 12:02:55,
+# before the instance, and failed with ORA-01034 — so wait (max 15 min) for the database to be open
+for i in $(seq 1 90); do
+  om=$(printf 'set heading off feedback off\nselect open_mode from v$database;\nexit\n' | sqlplus -s / as sysdba 2>/dev/null | grep -oE 'READ WRITE|MOUNTED|READ ONLY' | head -n 1)
+  [ "$om" = "READ WRITE" ] && break; sleep 10
+done
+[ "${om:-}" = "READ WRITE" ] || { echo "database not open after 15 min (open_mode=${om:-none}), backup not run"; exit 1; }
 start=$(date +%s)
 rc=0
 rman target / log="$log" <<RMAN || rc=$?
