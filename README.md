@@ -116,6 +116,16 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
 file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
 
+## Fix 2026-11-01 — a level 1 skipped silently
+
+The hourly health check reported `CRIT backup L0/L1 oldest file 49.5 h ago`: the 02:00 level 1 had left no log.
+The archived-log timer (every :00 and :30) starts in the same minute as the level 1 (02:00) and the level 0
+(Sunday 03:00), and `backup.sh` took its lock with `flock -n … exit 0` — the job that lost the race **skipped
+with exit code 0**, so systemd recorded a success. Reproduced (lock held 15 s → level 1 "finished" in 0 s, no
+log), fixed by waiting for the lock (`flock -w 1800`, exit 1 if it never comes), same test → the level 1 waited
+14 s and ran; health check OK. Evidence: [`01-strategy/results/lock-collision-20261101.txt`](01-strategy/results/lock-collision-20261101.txt).
+Lesson: "skip" must never look like "success" — the health check caught the effect, not the cause.
+
 ## Scheduled checks (2026-10-30)
 
 [`install_scheduled_checks.sh`](04-scripts/install_scheduled_checks.sh) installs two systemd timers, both
