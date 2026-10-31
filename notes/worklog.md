@@ -84,3 +84,30 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   not manage (`LOCATION=+FRA`). I had checked the FRA view only, never the disk group. Found only when
   GoldenGate stopped and I followed the CRS trace: Stuck Archiver → service tree stopped.
 - First guess was my password change (it happened in the same minute); the CRS trace showed it was not.
+
+## 2026-11-01 — level 1 skipped silently (branch `fix/backup-lock-wait`)
+
+- **Problem:** health check `CRIT backup L0/L1 oldest file #21: 49.5 h ago`; the 02:00 level 1 left no log,
+  systemd showed nothing wrong.
+- **Cause:** the archived-log timer (`*:00/30`) fires in the same minute as the level 1 (02:00) and the level 0
+  (Sun 03:00). `backup.sh` used `flock -n … exit 0`: the loser of the race skipped with exit code 0 = success.
+  On 10-30 the level 1 won, on 11-01 the archived-log job won. Reproduced with the old script: lock held 15 s →
+  level 1 "finished" in 0 s, result success, no log.
+- **Fix:** `flock -w 1800` (wait up to 30 min; exit 1 if the lock never comes). Same test: waited 14 s, ran,
+  health check OK. Deployed only `backup.sh` (not `install_timers.sh`, which would also restart the level 0 timer).
+- **Lesson:** a "skip" must exit non-zero, or monitoring sees a success. The health check caught the effect
+  (old backups), which is why both checks are needed.
+
+## 2026-11-01 — drill 2b timing was wrong in the README (branch `docs/drill2-flashback-fk`)
+
+- **Problem:** README and runbook said Flashback Table took "< 1 s"; all four logs show ~7 min (7:06, 6:49, 7:20, 7:48).
+  I had copied the Flashback Drop timing.
+- **Cause:** ASH — 467 CPU samples, current object `TRANSACTIONS` (443) / `CARDS` (12): Flashback Table moves rows,
+  and each `ACCOUNTS` row is checked against the unindexed child foreign keys (BANKDB leaves them unindexed on purpose).
+- **Proof:** temporary indexes on `TRANSACTIONS.ACCOUNT_ID` and `CARDS.ACCOUNT_ID` → 2.96 s. Dropped afterwards;
+  checksums identical.
+- **My mistake on the way:** the 2a clean-up renamed my extra `CARDS` index to `CARDS_PAN_UK` (it maps `BIN$`
+  indexes by first column) and left the real ones as `BIN$` (`ORA-00955`). Repaired by hand: dropped the extra index
+  after checking it was the non-unique `ACCOUNT_ID` one, renamed the two real indexes back.
+- **Lesson:** read every timing in a log, not the first one; a test that adds objects must not run through a
+  clean-up written for the original object set.

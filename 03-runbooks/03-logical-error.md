@@ -8,7 +8,7 @@ better an SCN), which objects, what else changed since?
 | What happened | Tool | Measured |
 |---------------|------|----------|
 | `DROP TABLE` (no PURGE) | `FLASHBACK TABLE t TO BEFORE DROP` | < 1 s (drill 2a) |
-| wrong `UPDATE`/`DELETE`, undo still has it | versions query by SCN, `FLASHBACK TABLE t TO SCN s` | < 1 s (drill 2b) |
+| wrong `UPDATE`/`DELETE`, undo still has it | versions query by SCN, `FLASHBACK TABLE t TO SCN s` | < 1 s for a small table; **~7 min** for 4,285 rows of `ACCOUNTS` with unindexed child foreign keys, 3 s with them indexed (drill 2b) |
 | `TRUNCATE`, `DROP ... PURGE`, undo too old | `RECOVER TABLE ... UNTIL SCN` (auxiliary instance) | 221 s for 500 K rows (drill 4) |
 | many objects / a whole schema in one PDB | PDB point-in-time recovery | 25 s (drill 5e) |
 | whole CDB, Flashback Database on | `FLASHBACK DATABASE TO SCN` | 17 s (drill 5d) |

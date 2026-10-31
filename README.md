@@ -30,7 +30,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 | 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s (45–49 s re-run with TDE, restore itself unchanged) | PASS |
 | 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s (re-run 29/10: **failed** after 2 failovers — old-incarnation level 0, `ORA-01207`; PASS in 20 s after a new level 0) | PASS |
 | 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s (re-run 29/10: same) | PASS |
-| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
+| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | ~7 min (6:49–7:48 in 4 runs; I had written "< 1 s"): unindexed child foreign keys — [3 s with them indexed](02-drills/02-logical-errors/README.md#why-flashback-table-took-7-minutes-2026-11-01) | PASS |
 | 3 | [Corrupted block](02-drills/03-block-corruption/) | orcl3, filesystem | `VALIDATE` + `RECOVER CORRUPTION LIST`, PDB stays open | 20 s (re-run: 111 s — 110 archived logs since the level 0) | PASS |
 | 4 | [TRUNCATE by mistake](02-drills/04-recover-table/) | orcl3 | `RECOVER TABLE ... UNTIL SCN` (auxiliary instance) + copy back | 221 s (re-run: 253 s) | PASS |
 | 5a | [All control files lost](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | `SET DBID`, control file from autobackup, `RESETLOGS` | 15 s | PASS |
@@ -49,7 +49,6 @@ Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.m
 
 ## Remaining
 
-- Run the health check from a timer and on the standby too
 - **TDE keystore in the backup strategy.** Since the security lab, DRILLPDB's `BANK_DATA` on the RAC is
   encrypted: its backups are useless on another host without the keystore. The keystore has an off-host
   copy and a tested restore ([security lab, 02-tde](https://github.com/phuochuyy/oracle-security-compliance-lab/blob/main/02-tde/README.md)),
@@ -115,6 +114,16 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 
 The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
 file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
+
+## Fix 2026-11-01 — a level 1 skipped silently
+
+The hourly health check reported `CRIT backup L0/L1 oldest file 49.5 h ago`: the 02:00 level 1 had left no log.
+The archived-log timer (every :00 and :30) starts in the same minute as the level 1 (02:00) and the level 0
+(Sunday 03:00), and `backup.sh` took its lock with `flock -n … exit 0` — the job that lost the race **skipped
+with exit code 0**, so systemd recorded a success. Reproduced (lock held 15 s → level 1 "finished" in 0 s, no
+log), fixed by waiting for the lock (`flock -w 1800`, exit 1 if it never comes), same test → the level 1 waited
+14 s and ran; health check OK. Evidence: [`01-strategy/results/lock-collision-20261101.txt`](01-strategy/results/lock-collision-20261101.txt).
+Lesson: "skip" must never look like "success" — the health check caught the effect, not the cause.
 
 ## Scheduled checks (2026-10-30)
 

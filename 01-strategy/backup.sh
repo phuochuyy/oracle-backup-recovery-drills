@@ -8,7 +8,10 @@
 set -eu
 mode=$1; mkdir -p /u02/backup/orcl3 /u02/backup/logs
 exec 9>/u02/backup/logs/.backup.lock
-flock -n 9 || { echo "another backup is running, skip"; exit 0; }
+# Wait for the lock instead of skipping: the archived-log timer (every :00/:30) fires in the same minute as
+# the level 1 (02:00) and the level 0 (Sun 03:00); with `flock -n` the loser skipped silently with exit 0
+# (the level 1 of 2026-11-01 was lost that way). An archived-log run takes ~10 s.
+flock -w 1800 9 || { echo "another backup still running after 30 min, this backup was NOT run"; exit 1; }
 log=/u02/backup/logs/backup_${mode}_$(date +%Y%m%d_%H%M%S).log
 case $mode in
   0|1)  cmd="backup incremental level $mode database tag 'L$mode' plus archivelog not backed up 1 times tag 'ARCH';" ;;
