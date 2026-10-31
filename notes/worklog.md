@@ -97,3 +97,17 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   health check OK. Deployed only `backup.sh` (not `install_timers.sh`, which would also restart the level 0 timer).
 - **Lesson:** a "skip" must exit non-zero, or monitoring sees a success. The health check caught the effect
   (old backups), which is why both checks are needed.
+
+## 2026-11-01 — drill 2b timing was wrong in the README (branch `docs/drill2-flashback-fk`)
+
+- **Problem:** README and runbook said Flashback Table took "< 1 s"; all four logs show ~7 min (7:06, 6:49, 7:20, 7:48).
+  I had copied the Flashback Drop timing.
+- **Cause:** ASH — 467 CPU samples, current object `TRANSACTIONS` (443) / `CARDS` (12): Flashback Table moves rows,
+  and each `ACCOUNTS` row is checked against the unindexed child foreign keys (BANKDB leaves them unindexed on purpose).
+- **Proof:** temporary indexes on `TRANSACTIONS.ACCOUNT_ID` and `CARDS.ACCOUNT_ID` → 2.96 s. Dropped afterwards;
+  checksums identical.
+- **My mistake on the way:** the 2a clean-up renamed my extra `CARDS` index to `CARDS_PAN_UK` (it maps `BIN$`
+  indexes by first column) and left the real ones as `BIN$` (`ORA-00955`). Repaired by hand: dropped the extra index
+  after checking it was the non-unique `ACCOUNT_ID` one, renamed the two real indexes back.
+- **Lesson:** read every timing in a log, not the first one; a test that adds objects must not run through a
+  clean-up written for the original object set.
