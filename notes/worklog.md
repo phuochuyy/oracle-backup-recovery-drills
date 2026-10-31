@@ -84,3 +84,16 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   not manage (`LOCATION=+FRA`). I had checked the FRA view only, never the disk group. Found only when
   GoldenGate stopped and I followed the CRS trace: Stuck Archiver → service tree stopped.
 - First guess was my password change (it happened in the same minute); the CRS trace showed it was not.
+
+## 2026-11-01 — level 1 skipped silently (branch `fix/backup-lock-wait`)
+
+- **Problem:** health check `CRIT backup L0/L1 oldest file #21: 49.5 h ago`; the 02:00 level 1 left no log,
+  systemd showed nothing wrong.
+- **Cause:** the archived-log timer (`*:00/30`) fires in the same minute as the level 1 (02:00) and the level 0
+  (Sun 03:00). `backup.sh` used `flock -n … exit 0`: the loser of the race skipped with exit code 0 = success.
+  On 10-30 the level 1 won, on 11-01 the archived-log job won. Reproduced with the old script: lock held 15 s →
+  level 1 "finished" in 0 s, result success, no log.
+- **Fix:** `flock -w 1800` (wait up to 30 min; exit 1 if the lock never comes). Same test: waited 14 s, ran,
+  health check OK. Deployed only `backup.sh` (not `install_timers.sh`, which would also restart the level 0 timer).
+- **Lesson:** a "skip" must exit non-zero, or monitoring sees a success. The health check caught the effect
+  (old backups), which is why both checks are needed.
