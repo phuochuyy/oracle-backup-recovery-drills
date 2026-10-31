@@ -1,0 +1,26 @@
+Level 1 skipped silently — backup.sh lock collision (2026-11-01, orcl3 on prm3)
+
+Symptom (health check, 03:31): CRIT backup L0/L1  oldest file #21: 49.5 h ago (max 26 h)
+/u02/backup/logs: backup_arch_20261101_020000.log exists, no backup_1_20261101_* (the 02:00 level 1 left no log)
+Cause: orcl3-backup-arch.timer (*:00/30) and orcl3-backup-1.timer (02:00) start in the same minute;
+backup.sh took the lock with `flock -n 9 || { echo "another backup is running, skip"; exit 0; }`
+-> the second job skipped with exit 0 (systemd: success, no alert). Same risk for the level 0 (Sun 03:00).
+
+Reproduced with the old script (lock held 15 s, like an archived-log run; then the level 1 started):
+  level 1 service finished after 0 s, result: success
+  newest level 1 log: /u02/backup/logs/backup_1_20261030_020000.log     <- nothing new: skipped
+
+Fix: flock -w 1800 9 || { echo "...this backup was NOT run"; exit 1; }   (wait up to 30 min, else fail)
+Deployed: md5 05e48d7b5babef8428772a04318b2fe8 (repo = /u02/backup/bin/backup.sh)
+
+Same test with the fixed script:
+  level 1 service finished after 29 s, result: success
+  /u02/backup/logs/backup_1_20261101_033435.log   (started 14 s after the job: waited for the lock)
+  "Finished backup" lines: 3
+
+Health check after (03:35):
+OK   backup L0/L1           oldest file #1: 0.0 h ago (max 26 h)
+OK   backup archivelog      last 0.0 h ago (max 1 h)
+OK   backup job 1           last run Sun 2026-11-01 03:34:50 +07: success
+OK   backup job arch        last run Sun 2026-11-01 03:30:09 +07: success
+CRIT archive dest 2         DEFERRED      (expected: standby stb3 not running in this lab scenario)
