@@ -111,3 +111,23 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   after checking it was the non-unique `ACCOUNT_ID` one, renamed the two real indexes back.
 - **Lesson:** read every timing in a log, not the first one; a test that adds objects must not run through a
   clean-up written for the original object set.
+
+## 2026-11-01 — new offload level 0 not in the catalog (branch `docs/offload-after-failover`)
+
+- **Problem:** after deleting the old-incarnation backups, a new level 0 on stb1 finished `rc=0` (760 s, 2.8 GB) but
+  `LIST BACKUP OF DATAFILE 40` in the catalog did not show it; the log had one line `ORA-20079: full resync from
+  primary database is not done`.
+- **Cause:** the failovers created a new incarnation the catalog did not know yet; a standby cannot register its
+  backups before a full resync from the primary. Disk backups are also site-bound: connected to the primary,
+  RMAN only lists/crosschecks the primary's own backups.
+- **Fix:** `RESYNC CATALOG` connected to `orcl` (primary) → full resync; then connected to `orcl_stb`: resync +
+  crosscheck → level 0 key 7930 listed.
+- **Lesson:** `rc=0` is not proof — check that the catalog shows the backup; after a failover resync from the primary first.
+
+## 2026-11-01 — RMAN passwords off the command line (branch `fix/password-off-cmdline`)
+
+- **Problem:** `backup_standby.sh` ran `rman target "sys/<pw>@..." catalog "rco/<pw>@..."` — both passwords visible in
+  `ps` on stb1 for the whole backup. Same class as the security lab's finding 10.
+- **Fix:** `rman log=...` with `CONNECT TARGET` / `CONNECT CATALOG` inside the here-document. Test: `ps` shows only
+  `rman`, the log has `connect target *`, 0 lines with a password, level 1 rc=0.
+- **Open:** that level 1 took 615 s — check block change tracking on the standby.

@@ -44,6 +44,10 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 
 Backups of the RAC run on the **standby** (offload, started by hand — no timer for the RAC) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
+After a failover (new incarnation) the standby's backup is **not recorded** in the catalog until a full resync
+from the primary has been done: the level 0 of 2026-11-01 ran with `rc=0` and only `ORA-20079: full resync from primary
+database is not done` in its log; `RESYNC CATALOG` connected to the primary, then again from the standby → the
+catalog lists it (datafile 40: key 7930). Order after every failover: resync from the primary first, then back up.
 
 Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
