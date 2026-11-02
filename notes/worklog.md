@@ -131,3 +131,15 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - **Fix:** `rman log=...` with `CONNECT TARGET` / `CONNECT CATALOG` inside the here-document. Test: `ps` shows only
   `rman`, the log has `connect target *`, 0 lines with a password, level 1 rc=0.
 - **Open:** that level 1 took 615 s — check block change tracking on the standby.
+
+## 2026-11-02 — capacity checks (branch `feature/capacity-checks`)
+
+- Trigger: the host (sparse VM disk images) filled up when stb3 pulled a ~3.7 GB redo gap after transport was
+  switched back on; 4 VMs paused. Inside the VMs every check was green — a VM cannot see the host's space.
+- Added check 7 to `check_backup_health.sh`: data disk groups, file systems, and on a primary the MB of archived
+  redo each standby destination has not received (current incarnation, per thread, from the destination's own
+  `V$ARCHIVED_LOG` rows). Verified the arithmetic with a simulated 5-log gap against a hand count (380 MB, 10 logs).
+- Not verified yet: a real deferred destination (orcl3 dest 2 in scenario `dg-a`) — prm3 was off; the hourly
+  run on prm3 will show it after the next `install_scheduled_checks.sh prm3`.
+- What I tried first and dropped: ASM `thin_provisioned=TRUE` + rebalance on the standby FRA returned 0 MB to the
+  host (one disk, nothing moved) — set back to FALSE.

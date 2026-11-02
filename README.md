@@ -16,7 +16,7 @@
 | Block change tracking | enabled — level 1 read 0.1 % of blocks |
 | Archived log deletion | applied on the standby **and** backed up once ([why](notes/worklog.md)) |
 | Online redo | 2 members per group on different disks ([found with 1](02-drills/06-redo-log/)) |
-| Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture |
+| Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture, capacity (data disk groups, file systems, redo each standby has not received) |
 | Proof | `RESTORE DATABASE VALIDATE` + archived logs since level 0, no errors |
 
 First results: [`01-strategy/results`](01-strategy/results/README.md) — level 0 111 s → 2.3 GB, level 1 10 s.
@@ -119,6 +119,16 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
 file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
 
+## Re-check 2026-11-01 (with the HA/DR run 4, after two more FSFO failovers)
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 28 s | [`run-service-r4-20261101.log`](02-drills/01-lost-datafile/run-service-r4-20261101.log) |
+| 2 Flashback Drop / Table | PASS; Flashback Table 7 min 48 s → cause found (unindexed child foreign keys, see 2b) | [`run-r4-20261101.log`](02-drills/02-logical-errors/run-r4-20261101.log) |
+| 6b whole redo group lost | PASS, 4 s from detection to OK | [`run-6b-r4-20261101.log`](02-drills/06-redo-log/run-6b-r4-20261101.log) |
+
+DRILLPDB checksums identical afterwards (all 5 tables).
+
 ## Fix 2026-11-01 — a level 1 skipped silently
 
 The hourly health check reported `CRIT backup L0/L1 oldest file 49.5 h ago`: the 02:00 level 1 had left no log.
@@ -151,6 +161,17 @@ the script now sets `LC_ALL=C`. No mail server in the lab: alerts are read with 
 First run of the validate service (by hand, 2026-10-30 00:22): **OK in 202 s** — the level 0 of 10-28 02:00, the level 1s and every archived log since read and checked block by block, nothing restored.
 
 The RAC is not validated on a schedule yet: its backups (on the standby) are still started by hand.
+
+**Capacity (check 7, added 2026-11-02).** The VMs' disks are sparse images on a host with little free space.
+On 2026-11-02 the orcl3 standby, off for a while, pulled a ~3.7 GB redo gap in one go when transport was switched
+back on and the host filled up (4 VMs paused). Nothing inside a VM can see the host's free space — each VM
+still saw GBs free on its own disk. So the check reports what fills it, from inside: disk groups holding
+datafiles (`DATA_WARN`/`DATA_CRIT`, % used), the file systems under `/`, `ORACLE_BASE` and any non-ASM
+datafiles or FRA (`FS_WARN`/`FS_CRIT`), and on a primary the **redo each standby destination has not received
+yet** — the MB it will pull when transport is on again (`GAP_WARN_MB`, default 1024), with a WARN if part of it
+was already deleted on the primary (the standby would then need a restore). First runs and a check of the gap
+arithmetic against a hand count: [`capacity-checks-20261102.txt`](01-strategy/results/capacity-checks-20261102.txt).
+Limit: the host's own free space is still checked by hand (`df` on the host) before switching transport on.
 
 **Blind spot found while setting this up:** after the three failovers of 2026-10-29 evening the RAC is in
 incarnation 21 (20:58), and its newest level 0 (13:15) belongs to incarnation 18 — a restore from backup would

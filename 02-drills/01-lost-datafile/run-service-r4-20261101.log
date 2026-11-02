@@ -1,0 +1,59 @@
+03:19:42 target datafile #40 +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247951643
+03:19:42 close DRILLPDB and delete the datafile from ASM (the 'failure')
+
+Pluggable database altered.
+
+03:19:45 open DRILLPDB (expect ORA-01157)
+ORA-01157: cannot identify/lock data file 40 - see DBWR trace file
+ORA-01110: data file 40: '+DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247951643'
+03:19:45 restore from the standby over the network
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Sun Nov 1 03:19:45 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL (DBID=1769932804)
+connected to recovery catalog database
+
+RMAN> restore datafile 40 from service orcl_stb;
+Starting restore at 01-NOV-26
+new incarnation of database registered in recovery catalog
+Creating and using snapshot control file for resync
+starting full resync of recovery catalog
+full resync complete
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=283 instance=orcl1 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=100 instance=orcl1 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: using network backup set from service orcl_stb
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00040 to +DATA/ORCL/5ED7B509607A0C87E0630A68A8C08C9C/DATAFILE/bank_data.460.1247951643
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:03
+Finished restore at 01-NOV-26
+
+
+RMAN> recover datafile 40;
+Starting recover at 01-NOV-26
+starting full resync of recovery catalog
+full resync complete
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+starting media recovery
+media recovery complete, elapsed time: 00:00:01
+
+Finished recover at 01-NOV-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+03:20:11 open DRILLPDB again
+
+Pluggable database altered.
+
+03:20:14 verify: PASS (5 tables, counts and checksums match)
+03:20:14 RTO 28 s (method service)
