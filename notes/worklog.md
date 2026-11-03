@@ -200,3 +200,18 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   standby database (`orcl_stb1` must not pass as `orcl`).
 - **Test:** on prm1 (primary) the service exits 0 "skip"; on stb1 level 1 rc=0 in 640 s, channels only on
   `orcl_stb1`, backup sets in the catalog (tag STB_L1); health check `backup L0/L1` OK (0.1 h).
+
+## Rolling stb3 forward instead of shipping the gap (Region B, after the HA/DR run 5)
+
+- stb3 was 68 archived logs / 3.7 GB behind. `RECOVER STANDBY DATABASE FROM SERVICE orcl3`
+  ([`roll_forward_standby.sh`](../01-strategy/roll_forward_standby.sh)) brought it to the primary's SCN in ~100 s: 30
+  datafiles / 17,726 MB identical to the primary, nothing to recover.
+- **My misjudgement:** I chose it to save host disk, but the standby's datafiles grew to the primary's size (UNDO 3.8 GB,
+  BANK_DATA 3.3 GB filled in) — host free 10.3 → 0.66 GB, no VM paused. Recovered by deleting (with the user's OK)
+  141 backed-up archived logs on prm3 below SCN 35,700,000 — below stb3, below the GoldenGate EXTB checkpoint and below the
+  Debezium offset. The first `DELETE` removed nothing (`RMAN-08120 not yet applied by standby`: a roll-forward does not
+  update what the primary knows) and my output filter hid the warning — counted the files on disk the second time
+  (155 → 14, `FORCE`). The host showed the freed space only half a minute after `fstrim`.
+- The first run lost its RMAN log (`/u02/backup` is root-owned on stb3) — now under `/home/oracle/rman_logs`.
+- Side effect found at the switchover: the restored control file names redo log directories that exist only on prm3
+  (HA/DR finding F16).
