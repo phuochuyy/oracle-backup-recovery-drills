@@ -182,3 +182,36 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - **Fix:** CONNECT lines inside the here-document (stdin), both methods. Test: drill 1a PASS, RTO 25 s; 61 `ps`
   samples, 0 with a password; the log shows `connect target *`.
 - **Lesson:** after a class of bug is found, grep the whole repo for the class (`grep -rn 'PASSWORD@'`), not the file.
+
+## Scheduled RAC backup on the standby (branch `feature/rac-backup-timer`)
+
+- **Gap:** the RAC had no backup schedule — the offload level 0/1 on stb1 was started by hand, and after every
+  failover someone had to remember the catalog resync. UNDO_6 went without any backup that way.
+- **Built:** [`rac_backup_job.sh`](../01-strategy/offload/rac_backup_job.sh) + systemd timers on every RAC node
+  (level 1 daily 03:30, `Persistent=true`; level 0 Sunday 04:00, not persistent — 2.8 GB caught up at boot could fill
+  the lab host, the health check reports a missed one). The job runs only on the standby, on one node of it, resyncs
+  the catalog from the primary first, and fails on `ORA-20079`. Credentials: auto-login wallet in its own
+  `TNS_ADMIN`, made by [`install_rac_backup.sh`](../01-strategy/offload/install_rac_backup.sh) with a random wallet
+  password that is never stored. Installed on prm1 and stb1 (prm2/stb2: run the installer when they are up).
+- **My mistake, caught by the first real run:** resync and backup were in one RMAN session; the second
+  `CONNECT TARGET` (to the standby) failed with `RMAN-06167 already connected` and RMAN went on with the first target
+  — **it backed up the primary**: 755 MB level 1 + 2,180 MB archived logs into the primary's FRA (62 → 80 %). Valid
+  backups, wrong place. Now two RMAN sessions, and the job fails unless every channel ran on an instance of the
+  standby database (`orcl_stb1` must not pass as `orcl`).
+- **Test:** on prm1 (primary) the service exits 0 "skip"; on stb1 level 1 rc=0 in 640 s, channels only on
+  `orcl_stb1`, backup sets in the catalog (tag STB_L1); health check `backup L0/L1` OK (0.1 h).
+
+## Rolling stb3 forward instead of shipping the gap (Region B, after the HA/DR run 5)
+
+- stb3 was 68 archived logs / 3.7 GB behind. `RECOVER STANDBY DATABASE FROM SERVICE orcl3`
+  ([`roll_forward_standby.sh`](../01-strategy/roll_forward_standby.sh)) brought it to the primary's SCN in ~100 s: 30
+  datafiles / 17,726 MB identical to the primary, nothing to recover.
+- **My misjudgement:** I chose it to save host disk, but the standby's datafiles grew to the primary's size (UNDO 3.8 GB,
+  BANK_DATA 3.3 GB filled in) — host free 10.3 → 0.66 GB, no VM paused. Recovered by deleting (with the user's OK)
+  141 backed-up archived logs on prm3 below SCN 35,700,000 — below stb3, below the GoldenGate EXTB checkpoint and below the
+  Debezium offset. The first `DELETE` removed nothing (`RMAN-08120 not yet applied by standby`: a roll-forward does not
+  update what the primary knows) and my output filter hid the warning — counted the files on disk the second time
+  (155 → 14, `FORCE`). The host showed the freed space only half a minute after `fstrim`.
+- The first run lost its RMAN log (`/u02/backup` is root-owned on stb3) — now under `/home/oracle/rman_logs`.
+- Side effect found at the switchover: the restored control file names redo log directories that exist only on prm3
+  (HA/DR finding F16).

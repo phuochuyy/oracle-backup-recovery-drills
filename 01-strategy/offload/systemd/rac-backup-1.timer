@@ -1,0 +1,11 @@
+[Unit]
+Description=RAC backup on the standby: level 1 every day
+# Persistent: a level 1 missed while the lab was off runs at the next boot (small, minutes)
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+Unit=rac-backup@1.service
+
+[Install]
+WantedBy=timers.target
