@@ -13,10 +13,10 @@
 | Backups | level 0 weekly, level 1 daily, archived logs every 30 min (systemd timers, [`01-strategy/systemd`](01-strategy/systemd)) |
 | Format | compressed backupsets, `BASIC` algorithm (EE; LOW/MEDIUM/HIGH need Advanced Compression), 2 channels |
 | Location | `/u02/backup` on a different virtual disk than the datafiles |
-| Block change tracking | enabled — level 1 read 0.1 % of blocks |
+| Block change tracking | enabled — level 1 read 0.1 % of blocks (1,135 of 1,823,744 = 0.062 %) |
 | Archived log deletion | applied on the standby **and** backed up once ([why](notes/worklog.md)) |
 | Online redo | 2 members per group on different disks ([found with 1](02-drills/06-redo-log/)) |
-| Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture |
+| Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture, capacity (data disk groups, file systems, redo each standby has not received) |
 | Proof | `RESTORE DATABASE VALIDATE` + archived logs since level 0, no errors |
 
 First results: [`01-strategy/results`](01-strategy/results/README.md) — level 0 111 s → 2.3 GB, level 1 10 s.
@@ -30,7 +30,7 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 | 1a | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | `RESTORE ... FROM SERVICE` standby | 14 s (45–49 s re-run with TDE, restore itself unchanged) | PASS |
 | 1b | [Lost datafile](02-drills/01-lost-datafile/) | RAC primary, ASM | standby's backup via recovery catalog | 17 s (re-run 29/10: **failed** after 2 failovers — old-incarnation level 0, `ORA-01207`; PASS in 20 s after a new level 0) | PASS |
 | 2a | [Dropped table](02-drills/02-logical-errors/) | RAC primary | Flashback Drop + re-create the lost FK | < 1 s (re-run 29/10: same) | PASS |
-| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | < 1 s | PASS |
+| 2b | [Bad batch update](02-drills/02-logical-errors/) | RAC primary | versions query (SCN) + Flashback Table | ~7 min (6:49–7:48 in 4 runs; I had written "< 1 s"): unindexed child foreign keys — [3 s with them indexed](02-drills/02-logical-errors/README.md#why-flashback-table-took-7-minutes-2026-11-01) | PASS |
 | 3 | [Corrupted block](02-drills/03-block-corruption/) | orcl3, filesystem | `VALIDATE` + `RECOVER CORRUPTION LIST`, PDB stays open | 20 s (re-run: 111 s — 110 archived logs since the level 0) | PASS |
 | 4 | [TRUNCATE by mistake](02-drills/04-recover-table/) | orcl3 | `RECOVER TABLE ... UNTIL SCN` (auxiliary instance) + copy back | 221 s (re-run: 253 s) | PASS |
 | 5a | [All control files lost](02-drills/05-throwaway-cdb/) | DRILL (throw-away) | `SET DBID`, control file from autobackup, `RESETLOGS` | 15 s | PASS |
@@ -44,12 +44,15 @@ Test data: **DRILLPDB** with the shared BANKDB dataset at scale 1 ([`create_dril
 
 Backups of the RAC run on the **standby** (offload, started by hand — no timer for the RAC) and are registered in a **recovery catalog**
 (PDB RCAT on prm3): [`01-strategy/catalog`](01-strategy/catalog), [`01-strategy/offload`](01-strategy/offload).
+After a failover (new incarnation) the standby's backup is **not recorded** in the catalog until a full resync
+from the primary has been done: the level 0 of 2026-11-01 ran with `rc=0` and only `ORA-20079: full resync from primary
+database is not done` in its log; `RESYNC CATALOG` connected to the primary, then again from the standby → the
+catalog lists it (datafile 40: key 7930). Order after every failover: resync from the primary first, then back up.
 
 Runbooks: [03-runbooks](03-runbooks/README.md). Problems I hit: [notes/worklog.md](notes/worklog.md).
 
 ## Remaining
 
-- Run the health check from a timer and on the standby too
 - **TDE keystore in the backup strategy.** Since the security lab, DRILLPDB's `BANK_DATA` on the RAC is
   encrypted: its backups are useless on another host without the keystore. The keystore has an off-host
   copy and a tested restore ([security lab, 02-tde](https://github.com/phuochuyy/oracle-security-compliance-lab/blob/main/02-tde/README.md)),
@@ -116,6 +119,42 @@ sides. The restored files stay in `/u02/arch_restore` until the capture's checkp
 The health check also caught a datafile created that afternoon and never backed up (SQLT's tablespace,
 file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a new file as level 0) → OK.
 
+## Re-check 2026-11-01 (with the HA/DR run 4, after two more FSFO failovers)
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 28 s | [`run-service-r4-20261101.log`](02-drills/01-lost-datafile/run-service-r4-20261101.log) |
+| 2 Flashback Drop / Table | PASS; Flashback Table 7 min 48 s → cause found (unindexed child foreign keys, see 2b) | [`run-r4-20261101.log`](02-drills/02-logical-errors/run-r4-20261101.log) |
+| 6b whole redo group lost | PASS, 4 s from detection to OK | [`run-6b-r4-20261101.log`](02-drills/06-redo-log/run-6b-r4-20261101.log) |
+
+DRILLPDB checksums identical afterwards (all 5 tables).
+
+## Re-check 2026-11-03 (with the HA/DR run 5)
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 25 s | [`run-service-r5-20261103.log`](02-drills/01-lost-datafile/run-service-r5-20261103.log) |
+| 2 Flashback Drop / Table | PASS; Flashback Table 7 min 09 s (unindexed child foreign keys, kept on purpose, see 2b) | [`run-r5-20261103.log`](02-drills/02-logical-errors/run-r5-20261103.log) |
+| 6b whole redo group lost | PASS, 5 s from detection to OK; both GoldenGate Extracts kept running | [`run-6b-r5-20261103.log`](02-drills/06-redo-log/run-6b-r5-20261103.log) |
+
+DRILLPDB checksums identical afterwards (all 5 tables).
+
+Found before the run: drill 1 still passed the SYS and catalog passwords on the `rman` command line (inside the
+ssh command, so visible in `ps` on prm1 and on the host) — the same mistake already fixed in `backup_standby.sh`,
+missed here. Now `CONNECT TARGET` / `CONNECT CATALOG` go in the here-document; 61 `ps` samples on prm1 during the
+run, 43 with `rman`, 0 with a password; the log shows `connect target *`
+([`ps-check-r5-20261103.txt`](02-drills/01-lost-datafile/ps-check-r5-20261103.txt)).
+
+## Fix 2026-11-01 — a level 1 skipped silently
+
+The hourly health check reported `CRIT backup L0/L1 oldest file 49.5 h ago`: the 02:00 level 1 had left no log.
+The archived-log timer (every :00 and :30) starts in the same minute as the level 1 (02:00) and the level 0
+(Sunday 03:00), and `backup.sh` took its lock with `flock -n … exit 0` — the job that lost the race **skipped
+with exit code 0**, so systemd recorded a success. Reproduced (lock held 15 s → level 1 "finished" in 0 s, no
+log), fixed by waiting for the lock (`flock -w 1800`, exit 1 if it never comes), same test → the level 1 waited
+14 s and ran; health check OK. Evidence: [`01-strategy/results/lock-collision-20261101.txt`](01-strategy/results/lock-collision-20261101.txt).
+Lesson: "skip" must never look like "success" — the health check caught the effect, not the cause.
+
 ## Scheduled checks (2026-10-30)
 
 [`install_scheduled_checks.sh`](04-scripts/install_scheduled_checks.sh) installs two systemd timers, both
@@ -129,8 +168,7 @@ while the instance is down ([`scheduled_check.sh`](04-scripts/scheduled_check.sh
 
 **Alerting on a change, not on a state:** a line in `~/health/alerts.log` and in the journal
 (`journalctl -t lab-health`) only when a CRIT/WARN appears or clears. Some CRITs are permanent here by design
-(Region B's deferred destination in scenario `dg-a`; backup age on the RAC primary, whose backups run on the
-standby) — an alert on every run would be noise nobody reads. Tested: first run = baseline, second run =
+(Region B's deferred destination in scenario `dg-a`) — an alert on every run would be noise nobody reads. Tested: first run = baseline, second run =
 no alert, a simulated change → `new CRIT …` and `cleared WARN …`. The first test failed: `comm` needs both
 state files sorted with the same collation, and my test sorted with another locale than systemd's —
 the script now sets `LC_ALL=C`. No mail server in the lab: alerts are read with `labctl`/ssh.
@@ -139,8 +177,30 @@ First run of the validate service (by hand, 2026-10-30 00:22): **OK in 202 s** �
 
 The RAC is not validated on a schedule yet: its backups (on the standby) are still started by hand.
 
+**Capacity (check 7, added 2026-11-02).** The VMs' disks are sparse images on a host with little free space.
+On 2026-11-02 the orcl3 standby, off for a while, pulled a ~3.7 GB redo gap in one go when transport was switched
+back on and the host filled up (4 VMs paused). Nothing inside a VM can see the host's free space — each VM
+still saw GBs free on its own disk. So the check reports what fills it, from inside: disk groups holding
+datafiles (`DATA_WARN`/`DATA_CRIT`, % used), the file systems under `/`, `ORACLE_BASE` and any non-ASM
+datafiles or FRA (`FS_WARN`/`FS_CRIT`), and on a primary the **redo each standby destination has not received
+yet** — the MB it will pull when transport is on again (`GAP_WARN_MB`, default 1024), with a WARN if part of it
+was already deleted on the primary (the standby would then need a restore). First runs and a check of the gap
+arithmetic against a hand count: [`capacity-checks-20261102.txt`](01-strategy/results/capacity-checks-20261102.txt).
+Limit: the host's own free space is still checked by hand (`df` on the host) before switching transport on.
+
 **Blind spot found while setting this up:** after the three failovers of 2026-10-29 evening the RAC is in
 incarnation 21 (20:58), and its newest level 0 (13:15) belongs to incarnation 18 — a restore from backup would
 fail like drill 1b (`ORA-01207`) until a new level 0 is taken; `RESTORE FROM SERVICE` (drill 1a) still works.
-`check_backup_health.sh` checks the age of the backups, not their incarnation, so it reports OK.
+`check_backup_health.sh` checked the age of the backups, not their incarnation, so it reported OK.
+
+**Fixed 2026-11-03 — backup age checked where the backups are** ([`health-check-backup-site-20261103.txt`](01-strategy/results/health-check-backup-site-20261103.txt)).
+Two faults of the same check: it ran the backup-age checks on the primary only, so the RAC primary reported
+"never backed up" every hour (its control file does not see the standby's backups — I had written that off as a
+permanent CRIT) while the standby, where the RAC backups really are, was not checked at all; and it ignored the
+incarnation. Now each host has `~/brlab/health.env` (`BACKUP_ROLE`: `PHYSICAL STANDBY` for the RAC, `PRIMARY` for
+orcl3; RAC archived logs `ARCH_MAX_H=26`, they are backed up with each level 0/1), the other side prints
+`OK backup age … (checked there)`, and only backups of the current incarnation count (a file unchanged since its
+backup — PDB$SEED — still counts). First run on the standby: **2 datafiles never backed up** — `UNDO_6` in
+DRILLPDB and SECPDB, created automatically on 2026-11-01 18:08, after the last level 0 (17:14) and level 1 (17:38).
+The old check could not see them.
 

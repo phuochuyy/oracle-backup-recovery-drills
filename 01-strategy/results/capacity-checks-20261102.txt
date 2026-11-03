@@ -1,0 +1,40 @@
+# check_backup_health.sh with check 7 (capacity) — first runs, 2026-11-02 ~12:10
+# Lab: prm1 (orcl primary) + stb1, stb2 (orcl_stb); prm3 off. Redo transport to orcl_stb on.
+# Copied to /tmp on each VM and run as oracle, then installed with install_scheduled_checks.sh prm1 stb1.
+
+===== prm1
+OK   role                   orcl PRIMARY READ WRITE
+CRIT backup base            oldest file #32: 9999.0 h ago (max 170 h)
+CRIT backup L0/L1           oldest file #32: 9999.0 h ago (max 26 h)
+WARN backup archivelog      last 90.3 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   fra used               49 % (reclaimable 37 %)
+OK   fra disk group         +FRA: 8552 MB free of 20480 MB
+OK   redo members           8 online members, 8 in ASM (not checked on disk)
+OK   archive dest 1         VALID
+OK   archive dest 2         VALID
+OK   gg capture OGG$CAP_EXTA ENABLED
+OK   data disk group        +DATA: 13028 MB free of 30720 MB (57 % used)
+OK   fs /                   65 % used, 11127 MB free
+OK   redo gap dest 2        VALID: 0 MB in 0 archived logs not received
+exit=2      (the 2 CRITs are the known ones: the RAC primary's backups run on the standby)
+
+===== stb1
+OK   role                   orcl_stb PHYSICAL STANDBY READ ONLY WITH APPLY
+OK   rman failures 24h      0
+OK   fra used               51 % (reclaimable 24 %)
+OK   fra disk group         +FRA: 9284 MB free of 20480 MB
+WARN archived logs          2 in +FRA but not managed by the FRA (archive dest not USE_DB_RECOVERY_FILE_DEST): never auto-deleted
+OK   redo members           8 online members, 8 in ASM (not checked on disk)
+OK   archive dest 1         VALID
+OK   archive dest 32        VALID
+OK   gg capture OGG$CAP_EXTA ENABLED
+OK   data disk group        +DATA: 13496 MB free of 30720 MB (56 % used)
+OK   fs /                   71 % used, 9302 MB free
+exit=0      (redo gap is a primary-only check)
+
+===== gap arithmetic with a simulated gap (prm1)
+The check's query with "max(sequence#) - 5" for what dest 2 received, against a hand count of the last 5
+local archived logs of each thread:
+query: 380 MB in 10 logs
+manual: 380 MB in 10 logs

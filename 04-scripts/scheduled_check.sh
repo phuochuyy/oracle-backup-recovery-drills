@@ -4,8 +4,8 @@
 #   scheduled_check.sh validate   validate.sh (RESTORE ... VALIDATE), output to ~/health/validate-<date>.log
 # Alerting = a change, not a state: a line goes to ~/health/alerts.log and to the journal (priority
 # warning/crit) only when a CRIT/WARN appears or clears. Some CRITs are expected and permanent in this lab
-# (Region B's deferred standby destination in scenario dg-a, backup age on the RAC primary whose backups
-# run on the standby) — alerting on the state would fire every hour and nobody would read it.
+# (Region B's deferred standby destination in scenario dg-a) — alerting on the state would fire every hour
+# and nobody would read it. (Backup age of the RAC is checked on its standby since 2026-11-03.)
 # No catch-up at boot (Persistent=false) and nothing runs while the instance is down.
 . ~/.bash_profile >/dev/null 2>&1
 export LC_ALL=C   # comm needs both state files sorted the same way, whatever the caller's locale

@@ -1,0 +1,11 @@
+# prm1 ps -eo args, every 0.5 s during drill 1 (service), script with CONNECT in the here-document
+lines sampled: 61; lines with rman: 43; lines containing the SYS or RCO password: 0 (grep -F)
+# distinct rman/sqlplus command lines seen:
+bash -c . ~/.bash_profile >/dev/null 2>&1; echo 'alter pluggable database drillpdb close immediate instances=all;' | sqlplus -s / as sysdba
+bash -c . ~/.bash_profile >/dev/null 2>&1; echo 'alter pluggable database drillpdb open instances=all;' | sqlplus -s / as sysdba
+bash -c . ~/.bash_profile >/dev/null 2>&1; echo 'alter pluggable database drillpdb open;' | sqlplus -s / as sysdba
+bash -c . ~/.bash_profile >/dev/null 2>&1; printf "set heading off feedback off pages 0\nalter session set container=DRILLPDB;\nselect file_id||':'||file_name f
+rman
+[sqlplus]
+sqlplus -s   as sysdba
+sqlplus -s   as sysdba @/home/oracle/bankdb/03_verify.sql DRILLPDB

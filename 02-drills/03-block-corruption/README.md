@@ -12,7 +12,7 @@ overwritten with zeros (`dd`, then flush buffer cache). Reading the row:
 **RTO 20 s**, PDB open the whole time, checksums PASS.
 
 **Notes**
-- With an Active Data Guard standby running, 23ai repairs such a block automatically from the standby
+- With an Active Data Guard standby running, 26ai repairs such a block automatically from the standby
   (automatic block media recovery); here the standby was down on purpose.
 - Bigfile tablespace: the block number from a rowid needs `DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid, 'BIGFILE')`.
 - My first run printed the datafile name with SQL*Plus' default 80-character lines; the name was cut and

@@ -1,0 +1,156 @@
+
+Session altered.
+
+Elapsed: 00:00:00.01
+== 2a: DROP TABLE bank.cards by mistake
+-- constraints and indexes of CARDS before:
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+CARDS_ACCOUNT_FK		 R ENABLED
+CARDS_ACCOUNT_ID_NN		 C ENABLED
+CARDS_CARD_ID_NN		 C ENABLED
+CARDS_EXPIRY_NN 		 C ENABLED
+CARDS_ISSUED_AT_NN		 C ENABLED
+CARDS_PAN_NN			 C ENABLED
+CARDS_PAN_UK			 U ENABLED
+CARDS_PK			 P ENABLED
+CARDS_STATUS_NN 		 C ENABLED
+
+9 rows selected.
+
+Elapsed: 00:00:01.38
+
+INDEX_NAME
+--------------------------------
+CARDS_ACCOUNT_IX
+CARDS_PAN_UK
+CARDS_PK
+
+3 rows selected.
+
+Elapsed: 00:00:00.03
+
+Table dropped.
+
+Elapsed: 00:00:00.21
+rows will be truncated
+
+
+OBJECT_NAME															 ORIGINAL_NAME
+-------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------
+BIN$XynGc/eQiwvgYwpoqMBJSQ==$0													 CARDS_ACCOUNT_IX
+BIN$XynGc/eTiwvgYwpoqMBJSQ==$0													 CARDS
+BIN$XynGc/eSiwvgYwpoqMBJSQ==$0													 CARDS_PK
+BIN$XynGc/eRiwvgYwpoqMBJSQ==$0													 CARDS_PAN_UK
+
+4 rows selected.
+
+Elapsed: 00:00:00.01
+
+Flashback complete.
+
+Elapsed: 00:00:00.09
+-- constraints and indexes of CARDS after FLASHBACK ... TO BEFORE DROP:
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+BIN$XynGc/eIiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eJiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eKiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eLiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eMiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eNiwvgYwpoqMBJSQ==$0	 C ENABLED
+BIN$XynGc/eOiwvgYwpoqMBJSQ==$0	 P ENABLED
+BIN$XynGc/ePiwvgYwpoqMBJSQ==$0	 U ENABLED
+
+8 rows selected.
+
+Elapsed: 00:00:00.03
+
+INDEX_NAME
+--------------------------------
+BIN$XynGc/eQiwvgYwpoqMBJSQ==$0
+BIN$XynGc/eRiwvgYwpoqMBJSQ==$0
+BIN$XynGc/eSiwvgYwpoqMBJSQ==$0
+
+3 rows selected.
+
+Elapsed: 00:00:00.00
+-- fix: rename the BIN$ objects, re-create the foreign key Flashback Drop does not bring back
+declare
+*
+ERROR at line 1:
+ORA-00955: name is already used by an existing object
+ORA-06512: at line 3
+ORA-06512: at line 19
+ORA-06512: at line 19
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+
+
+Elapsed: 00:00:01.23
+
+Table altered.
+
+Elapsed: 00:00:00.04
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+CARDS_ACCOUNT_FK		 R ENABLED
+CARDS_ACCOUNT_ID_NN		 C ENABLED
+CARDS_CARD_ID_NN		 C ENABLED
+CARDS_EXPIRY_NN 		 C ENABLED
+CARDS_ISSUED_AT_NN		 C ENABLED
+CARDS_PAN_NN			 C ENABLED
+CARDS_PAN_UK			 U ENABLED
+CARDS_PK			 P ENABLED
+CARDS_STATUS_NN 		 C ENABLED
+
+9 rows selected.
+
+Elapsed: 00:00:00.01
+== 2b: a bad batch zeroes 1/7 of the balances and commits
+
+Table altered.
+
+Elapsed: 00:00:00.02
+
+
+
+
+1 row selected.
+
+Elapsed: 00:00:00.02
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:02.01
+
+4285 rows updated.
+
+Elapsed: 00:00:00.04
+
+Commit complete.
+
+Elapsed: 00:00:00.03
+-- investigate with a versions query: what changed, when, by which transaction
+old   2: from bank.accounts versions between scn &scn_before and maxvalue
+new   2: from bank.accounts versions between scn   94529682 and maxvalue
+
+ROWS_CHANGED FIRST_CHANGE								 XID
+------------ --------------------------------------------------------------------------- ----------------
+	4285 01-NOV-26 03.29.55 AM							 0800110024030000
+
+1 row selected.
+
+Elapsed: 00:00:00.10
+old   1: flashback table bank.accounts to scn &scn_before
+new   1: flashback table bank.accounts to scn	94529682
+
+Flashback complete.
+
+Elapsed: 00:00:02.96
+
+Table altered.
+
+Elapsed: 00:00:00.01

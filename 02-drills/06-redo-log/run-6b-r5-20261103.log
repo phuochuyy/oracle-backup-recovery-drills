@@ -1,0 +1,47 @@
+21:54:49 group 12 (INACTIVE, archived): delete both members: /u02/oradata/ORCL3/redo/redo12.log /u02/redo2/redo12b.log
+21:54:50 health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #34: 4.4 h ago (max 170 h)
+OK   backup L0/L1           oldest file #34: 4.4 h ago (max 26 h)
+OK   backup archivelog      last 0.4 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job arch        last run Tue 2026-11-03 21:30:06 +07: success
+WARN fra used               80 % (reclaimable 20 %)
+CRIT redo member            group 12: /u02/oradata/ORCL3/redo/redo12.log MISSING on disk
+CRIT redo member            group 12: /u02/redo2/redo12b.log MISSING on disk
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+OK   fs /                   74 % used, 8277 MB free
+WARN fs /u02/oradata        81 % used, 7919 MB free
+WARN redo gap dest 2        DEFERRED: 3138 MB in 47 archived logs not received
+21:54:51 the database itself does not notice:
+12 /u02/oradata/ORCL3/redo/redo12.log OK
+12 /u02/redo2/redo12b.log OK
+21:54:51 repair: re-check status, CLEAR LOGFILE GROUP 12 (re-creates both members)
+-rw-r----- 1 oracle oinstall 209715712 Nov  3 21:54 /u02/oradata/ORCL3/redo/redo12.log
+-rw-r----- 1 oracle oinstall 209715712 Nov  3 21:54 /u02/redo2/redo12b.log
+21:54:54 switch through all groups, then health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #34: 4.4 h ago (max 170 h)
+OK   backup L0/L1           oldest file #34: 4.4 h ago (max 26 h)
+OK   backup archivelog      last 0.4 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job arch        last run Tue 2026-11-03 21:30:06 +07: success
+WARN fra used               80 % (reclaimable 20 %)
+OK   redo members           12 online members
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+OK   fs /                   74 % used, 8274 MB free
+WARN fs /u02/oradata        81 % used, 7888 MB free
+WARN redo gap dest 2        DEFERRED: 3169 MB in 54 archived logs not received
+21:54:55 alert log since the drill:
+      1 alter database clear logfile group 12
+      1 Clearing online log 12 of thread 1 sequence number 591
+      1 Completed: alter database clear logfile group 12
+      4 ORA-00312: online log 12 thread 1: '/u02/oradata/ORCL3/redo/redo12.log'
+      6 ORA-00312: online log 12 thread 1: '/u02/redo2/redo12b.log'
+      5 ORA-00313: open failed for members of log group 12 of thread 1
+      9 ORA-27037: unable to obtain file status
+21:54:56 RTO 5 s (from detection to health OK)

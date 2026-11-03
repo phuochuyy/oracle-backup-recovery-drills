@@ -84,3 +84,101 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   not manage (`LOCATION=+FRA`). I had checked the FRA view only, never the disk group. Found only when
   GoldenGate stopped and I followed the CRS trace: Stuck Archiver → service tree stopped.
 - First guess was my password change (it happened in the same minute); the CRS trace showed it was not.
+
+## 2026-11-01 — level 1 skipped silently (branch `fix/backup-lock-wait`)
+
+- **Problem:** health check `CRIT backup L0/L1 oldest file #21: 49.5 h ago`; the 02:00 level 1 left no log,
+  systemd showed nothing wrong.
+- **Cause:** the archived-log timer (`*:00/30`) fires in the same minute as the level 1 (02:00) and the level 0
+  (Sun 03:00). `backup.sh` used `flock -n … exit 0`: the loser of the race skipped with exit code 0 = success.
+  On 10-30 the level 1 won, on 11-01 the archived-log job won. Reproduced with the old script: lock held 15 s →
+  level 1 "finished" in 0 s, result success, no log.
+- **Fix:** `flock -w 1800` (wait up to 30 min; exit 1 if the lock never comes). Same test: waited 14 s, ran,
+  health check OK. Deployed only `backup.sh` (not `install_timers.sh`, which would also restart the level 0 timer).
+- **Lesson:** a "skip" must exit non-zero, or monitoring sees a success. The health check caught the effect
+  (old backups), which is why both checks are needed.
+
+## 2026-11-01 — drill 2b timing was wrong in the README (branch `docs/drill2-flashback-fk`)
+
+- **Problem:** README and runbook said Flashback Table took "< 1 s"; all four logs show ~7 min (7:06, 6:49, 7:20, 7:48).
+  I had copied the Flashback Drop timing.
+- **Cause:** ASH — 467 CPU samples, current object `TRANSACTIONS` (443) / `CARDS` (12): Flashback Table moves rows,
+  and each `ACCOUNTS` row is checked against the unindexed child foreign keys (BANKDB leaves them unindexed on purpose).
+- **Proof:** temporary indexes on `TRANSACTIONS.ACCOUNT_ID` and `CARDS.ACCOUNT_ID` → 2.96 s. Dropped afterwards;
+  checksums identical.
+- **My mistake on the way:** the 2a clean-up renamed my extra `CARDS` index to `CARDS_PAN_UK` (it maps `BIN$`
+  indexes by first column) and left the real ones as `BIN$` (`ORA-00955`). Repaired by hand: dropped the extra index
+  after checking it was the non-unique `ACCOUNT_ID` one, renamed the two real indexes back.
+- **Lesson:** read every timing in a log, not the first one; a test that adds objects must not run through a
+  clean-up written for the original object set.
+
+## 2026-11-01 — new offload level 0 not in the catalog (branch `docs/offload-after-failover`)
+
+- **Problem:** after deleting the old-incarnation backups, a new level 0 on stb1 finished `rc=0` (760 s, 2.8 GB) but
+  `LIST BACKUP OF DATAFILE 40` in the catalog did not show it; the log had one line `ORA-20079: full resync from
+  primary database is not done`.
+- **Cause:** the failovers created a new incarnation the catalog did not know yet; a standby cannot register its
+  backups before a full resync from the primary. Disk backups are also site-bound: connected to the primary,
+  RMAN only lists/crosschecks the primary's own backups.
+- **Fix:** `RESYNC CATALOG` connected to `orcl` (primary) → full resync; then connected to `orcl_stb`: resync +
+  crosscheck → level 0 key 7930 listed.
+- **Lesson:** `rc=0` is not proof — check that the catalog shows the backup; after a failover resync from the primary first.
+
+## 2026-11-01 — RMAN passwords off the command line (branch `fix/password-off-cmdline`)
+
+- **Problem:** `backup_standby.sh` ran `rman target "sys/<pw>@..." catalog "rco/<pw>@..."` — both passwords visible in
+  `ps` on stb1 for the whole backup. Same class as the security lab's finding 10.
+- **Fix:** `rman log=...` with `CONNECT TARGET` / `CONNECT CATALOG` inside the here-document. Test: `ps` shows only
+  `rman`, the log has `connect target *`, 0 lines with a password, level 1 rc=0.
+- **Open:** that level 1 took 615 s — check block change tracking on the standby.
+
+## 2026-11-02 — capacity checks (branch `feature/capacity-checks`)
+
+- Trigger: the host (sparse VM disk images) filled up when stb3 pulled a ~3.7 GB redo gap after transport was
+  switched back on; 4 VMs paused. Inside the VMs every check was green — a VM cannot see the host's space.
+- Added check 7 to `check_backup_health.sh`: data disk groups, file systems, and on a primary the MB of archived
+  redo each standby destination has not received (current incarnation, per thread, from the destination's own
+  `V$ARCHIVED_LOG` rows). Verified the arithmetic with a simulated 5-log gap against a hand count (380 MB, 10 logs).
+- Not verified yet: a real deferred destination (orcl3 dest 2 in scenario `dg-a`) — prm3 was off; the hourly
+  run on prm3 will show it after the next `install_scheduled_checks.sh prm3`.
+- What I tried first and dropped: ASM `thin_provisioned=TRUE` + rebalance on the standby FRA returned 0 MB to the
+  host (one disk, nothing moved) — set back to FALSE.
+
+## 2026-11-03 — backup age checked on the wrong side (branch `fix/health-check-backup-site`)
+
+- **Problem:** `lab-health` on prm1 reported `CRIT backup base … 9999 h` every hour. I had documented it as an
+  expected, permanent CRIT (the RAC's backups run on the standby, the primary's control file does not list them).
+  The other half I had missed: on the standby the backup-age checks were skipped (`if role = PRIMARY`), so nothing
+  checked the RAC's backups at all. And the check ignored the incarnation (blind spot written down on 2026-10-30).
+- **Fix:** `BACKUP_ROLE` per host in `~/brlab/health.env` (written by `install_scheduled_checks.sh`); backup ages
+  only from backups of the current incarnation, or of files unchanged since (PDB$SEED).
+- **My slip on the way:** the first version filtered strictly by the current incarnation → PDB$SEED files #2, #4, #9
+  "never backed up". Their backup carries the resetlogs SCN of the incarnation they were last written in.
+- **Result:** prm1 `OK backup age (checked there)`; stb1 `CRIT … file #45 9999 h` — real: `UNDO_6` of DRILLPDB and
+  SECPDB (created 2026-11-01 18:08, after the last level 0/1) never backed up. Taken by the next level 0 offload.
+- **Lesson:** a "permanent, expected" CRIT is a check in the wrong place — move the check, do not accept the noise.
+
+## 2026-11-03 — no check saw that FSFO could not fail over (branch `fix/health-check-fsfo`)
+
+- **Problem (run 5 of the HA/DR lab):** after a hard reset of the primary (stb1, out of memory) the observer stayed
+  disconnected for 25 min and redo transport was UNSYNCHRONIZED. The planned power-off of the primary then caused
+  no failover. Correct behaviour in Zero Data Loss mode — but nothing had reported the state.
+- **Fix:** check 8 on a primary with FSFO enabled: `OK` only when SYNCHRONIZED with the observer present, else `CRIT`.
+  Hourly `lab-health` alerts on the change. Evidence: `01-strategy/results/health-check-fsfo-20261103.txt`.
+
+
+## Re-run after run 5 — the fix was in Git, not on the server
+
+- Before the level 0 offload after run 5, stb1 still had the **old** `backup_standby.sh` (passwords on the RMAN
+  command line): the 11-01 fix had been tested and committed, but the copy on stb1 was never replaced. Copied the repo
+  version before the backup; md5 on stb1 = md5 in Git (`42082a22…`). Level 0 offload rc=0, 500 s.
+- Lesson: "fixed" means deployed on every host that runs it, checked by md5 — not merged.
+
+## Re-run after run 5 — drill 1 password on the command line (branch `fix/drill1-password-stdin`)
+
+- **Problem:** `02-drills/01-lost-datafile/drill.sh` ran `rman target sys/<pw>@orcl catalog rco/<pw>@...` inside the
+  ssh command — visible in `ps` on prm1 and on the host. When I fixed `backup_standby.sh` on 11-01 I grepped only
+  that file's pattern, not every script that starts RMAN.
+- **Fix:** CONNECT lines inside the here-document (stdin), both methods. Test: drill 1a PASS, RTO 25 s; 61 `ps`
+  samples, 0 with a password; the log shows `connect target *`.
+- **Lesson:** after a class of bug is found, grep the whole repo for the class (`grep -rn 'PASSWORD@'`), not the file.

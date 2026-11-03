@@ -9,6 +9,13 @@ for h in ${@:-prm1 stb1 prm3}; do
   ssh root@$h "mkdir -p /home/oracle/brlab/04-scripts /home/oracle/brlab/01-strategy && chown -R oracle:oinstall /home/oracle/brlab"
   scp -q "$d/04-scripts/check_backup_health.sh" "$d/04-scripts/scheduled_check.sh" oracle@$h:brlab/04-scripts/
   scp -q "$d/04-scripts/systemd/lab-health.service" "$d/04-scripts/systemd/lab-health.timer" root@$h:/etc/systemd/system/
+  # the RAC (orcl / orcl_stb) takes its backups on the standby, by hand (level 0/1 + archived logs together);
+  # orcl3 on the primary, with timers (archived logs every 30 min)
+  case $h in
+    prm1|prm2|stb1|stb2) env="BACKUP_ROLE='PHYSICAL STANDBY'\nARCH_MAX_H=26" ;;
+    *)                   env="BACKUP_ROLE=PRIMARY" ;;
+  esac
+  printf "# written by install_scheduled_checks.sh\n$env\n" | ssh oracle@$h 'cat > brlab/health.env'
   timers=lab-health.timer
   if [ $h = prm3 ]; then
     scp -q "$d/01-strategy/validate.sh" oracle@$h:brlab/01-strategy/

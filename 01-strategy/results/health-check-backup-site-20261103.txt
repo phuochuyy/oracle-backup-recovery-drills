@@ -1,0 +1,66 @@
+# check_backup_health.sh: backup age checked where the backups are taken (2026-11-03, scenario dg-a)
+# before (old script, 17:27): the RAC primary reports never backed up; the standby that holds the backups is not checked
+prm1 (orcl PRIMARY):  CRIT backup base   oldest file #32: 9999.0 h ago (max 170 h)
+prm1 (orcl PRIMARY):  CRIT backup L0/L1  oldest file #32: 9999.0 h ago (max 26 h)
+prm1 (orcl PRIMARY):  WARN backup archivelog last 119.4 h ago (max 1 h)
+stb1 (orcl_stb STANDBY): no backup lines
+
+===== after, prm1 (17:33:50) — BACKUP_ROLE='PHYSICAL STANDBY' ARCH_MAX_H=26 
+OK   role                   orcl PRIMARY READ WRITE
+OK   backup age             backups are taken on the physical standby side (checked there)
+OK   rman failures 24h      0
+OK   fra used               54 % (reclaimable 40 %)
+OK   fra disk group         +FRA: 7436 MB free of 20480 MB
+OK   redo members           8 online members, 8 in ASM (not checked on disk)
+OK   archive dest 1         VALID
+OK   archive dest 2         VALID
+OK   gg capture OGG$CAP_EXTA ENABLED
+OK   data disk group        +DATA: 13216 MB free of 30720 MB (56 % used)
+OK   fs /                   64 % used, 11248 MB free
+OK   redo gap dest 2        VALID: 0 MB in 0 archived logs not received
+exit=0
+===== after, stb1 (17:33:52) — BACKUP_ROLE='PHYSICAL STANDBY' ARCH_MAX_H=26 
+OK   role                   orcl_stb PHYSICAL STANDBY READ ONLY WITH APPLY
+CRIT backup base            oldest file #45: 9999.0 h ago (max 170 h)
+CRIT backup L0/L1           oldest file #45: 9999.0 h ago (max 26 h)
+WARN backup archivelog      last 47.8 h ago (max 26 h)
+OK   rman failures 24h      0
+OK   fra used               56 % (reclaimable 25 %)
+OK   fra disk group         +FRA: 8168 MB free of 20480 MB
+WARN archived logs          2 in +FRA but not managed by the FRA (archive dest not USE_DB_RECOVERY_FILE_DEST): never auto-deleted
+OK   redo members           8 online members, 8 in ASM (not checked on disk)
+OK   archive dest 1         VALID
+OK   archive dest 32        VALID
+OK   gg capture OGG$CAP_EXTA ENABLED
+OK   data disk group        +DATA: 13484 MB free of 30720 MB (56 % used)
+OK   fs /                   71 % used, 9242 MB free
+exit=2
+===== after, prm3 (17:33:57) — BACKUP_ROLE=PRIMARY 
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #1: 0.0 h ago (max 170 h)
+OK   backup L0/L1           oldest file #1: 0.0 h ago (max 26 h)
+OK   backup archivelog      last 0.0 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job 0           last run Tue 2026-11-03 17:33:13 +07: success
+OK   backup job 1           last run Tue 2026-11-03 17:24:45 +07: success
+OK   backup job arch        last run Tue 2026-11-03 17:30:08 +07: success
+WARN fra used               80 % (reclaimable 24 %)
+OK   redo members           12 online members
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+OK   fs /                   74 % used, 8407 MB free
+WARN fs /u02/oradata        81 % used, 7942 MB free
+WARN redo gap dest 2        DEFERRED: 2765 MB in 40 archived logs not received
+exit=1
+
+===== stb1: datafiles without a backup of the current incarnation (unchanged files excluded)
+
+     FILE# PDB	      TABLESPACE CREATED
+---------- ---------- ---------- ----------------
+	45 DRILLPDB   UNDO_6	 2026-11-01 18:08
+	46 SECPDB     UNDO_6	 2026-11-01 18:08
+
+LAST_L0_CURRENT_
+----------------
+2026-11-01 17:14

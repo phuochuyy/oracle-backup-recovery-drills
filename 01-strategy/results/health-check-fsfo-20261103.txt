@@ -1,0 +1,9 @@
+# check 8 (fsfo) added 2026-11-03 after run 5 of the HA/DR lab: the observer hung for 25 min and the target was
+# UNSYNCHRONIZED, so a power-off of the primary caused no failover — no check reported it.
+# Before the fix the same state would have printed nothing. After (prm1 = orcl primary, broker SUCCESS, 19:37:57):
+OK   role                   orcl PRIMARY READ WRITE
+OK   backup age             backups are taken on the physical standby side (checked there)
+OK   fsfo                   SYNCHRONIZED, observer present, target orcl_stb
+
+# prm3 (orcl3 primary, Region B FSFO disabled): no fsfo line
+0
