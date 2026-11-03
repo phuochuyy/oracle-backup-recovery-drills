@@ -1,0 +1,12 @@
+[Unit]
+Description=RAC backup on the standby: level 0 every Sunday
+# Not Persistent: a level 0 is ~2.8 GB on the VM disk; caught up at boot it could fill the lab host.
+# A missed level 0 shows up in the health check (backup age) instead.
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=false
+Unit=rac-backup@0.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=RMAN backup of the RAC on its standby, level %i (skips itself on the primary)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=oracle
+ExecStart=/u02/backup/bin/rac_backup_job.sh %i

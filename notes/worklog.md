@@ -182,3 +182,21 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - **Fix:** CONNECT lines inside the here-document (stdin), both methods. Test: drill 1a PASS, RTO 25 s; 61 `ps`
   samples, 0 with a password; the log shows `connect target *`.
 - **Lesson:** after a class of bug is found, grep the whole repo for the class (`grep -rn 'PASSWORD@'`), not the file.
+
+## Scheduled RAC backup on the standby (branch `feature/rac-backup-timer`)
+
+- **Gap:** the RAC had no backup schedule — the offload level 0/1 on stb1 was started by hand, and after every
+  failover someone had to remember the catalog resync. UNDO_6 went without any backup that way.
+- **Built:** [`rac_backup_job.sh`](../01-strategy/offload/rac_backup_job.sh) + systemd timers on every RAC node
+  (level 1 daily 03:30, `Persistent=true`; level 0 Sunday 04:00, not persistent — 2.8 GB caught up at boot could fill
+  the lab host, the health check reports a missed one). The job runs only on the standby, on one node of it, resyncs
+  the catalog from the primary first, and fails on `ORA-20079`. Credentials: auto-login wallet in its own
+  `TNS_ADMIN`, made by [`install_rac_backup.sh`](../01-strategy/offload/install_rac_backup.sh) with a random wallet
+  password that is never stored. Installed on prm1 and stb1 (prm2/stb2: run the installer when they are up).
+- **My mistake, caught by the first real run:** resync and backup were in one RMAN session; the second
+  `CONNECT TARGET` (to the standby) failed with `RMAN-06167 already connected` and RMAN went on with the first target
+  — **it backed up the primary**: 755 MB level 1 + 2,180 MB archived logs into the primary's FRA (62 → 80 %). Valid
+  backups, wrong place. Now two RMAN sessions, and the job fails unless every channel ran on an instance of the
+  standby database (`orcl_stb1` must not pass as `orcl`).
+- **Test:** on prm1 (primary) the service exits 0 "skip"; on stb1 level 1 rc=0 in 640 s, channels only on
+  `orcl_stb1`, backup sets in the catalog (tag STB_L1); health check `backup L0/L1` OK (0.1 h).
