@@ -13,7 +13,7 @@
 | Backups | level 0 weekly, level 1 daily, archived logs every 30 min (systemd timers, [`01-strategy/systemd`](01-strategy/systemd)) |
 | Format | compressed backupsets, `BASIC` algorithm (EE; LOW/MEDIUM/HIGH need Advanced Compression), 2 channels |
 | Location | `/u02/backup` on a different virtual disk than the datafiles |
-| Block change tracking | enabled — level 1 read 0.1 % of blocks |
+| Block change tracking | enabled — level 1 read 0.1 % of blocks (1,135 of 1,823,744 = 0.062 %) |
 | Archived log deletion | applied on the standby **and** backed up once ([why](notes/worklog.md)) |
 | Online redo | 2 members per group on different disks ([found with 1](02-drills/06-redo-log/)) |
 | Monitoring | [`check_backup_health.sh`](04-scripts/check_backup_health.sh): backup age per datafile, FRA, RMAN failures, redo members on disk, archive dests, GG capture, capacity (data disk groups, file systems, redo each standby has not received) |
@@ -129,6 +129,22 @@ file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a n
 
 DRILLPDB checksums identical afterwards (all 5 tables).
 
+## Re-check 2026-11-03 (with the HA/DR run 5)
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 25 s | [`run-service-r5-20261103.log`](02-drills/01-lost-datafile/run-service-r5-20261103.log) |
+| 2 Flashback Drop / Table | PASS; Flashback Table 7 min 09 s (unindexed child foreign keys, kept on purpose, see 2b) | [`run-r5-20261103.log`](02-drills/02-logical-errors/run-r5-20261103.log) |
+| 6b whole redo group lost | PASS, 5 s from detection to OK; both GoldenGate Extracts kept running | [`run-6b-r5-20261103.log`](02-drills/06-redo-log/run-6b-r5-20261103.log) |
+
+DRILLPDB checksums identical afterwards (all 5 tables).
+
+Found before the run: drill 1 still passed the SYS and catalog passwords on the `rman` command line (inside the
+ssh command, so visible in `ps` on prm1 and on the host) — the same mistake already fixed in `backup_standby.sh`,
+missed here. Now `CONNECT TARGET` / `CONNECT CATALOG` go in the here-document; 61 `ps` samples on prm1 during the
+run, 43 with `rman`, 0 with a password; the log shows `connect target *`
+([`ps-check-r5-20261103.txt`](02-drills/01-lost-datafile/ps-check-r5-20261103.txt)).
+
 ## Fix 2026-11-01 — a level 1 skipped silently
 
 The hourly health check reported `CRIT backup L0/L1 oldest file 49.5 h ago`: the 02:00 level 1 had left no log.
@@ -152,8 +168,7 @@ while the instance is down ([`scheduled_check.sh`](04-scripts/scheduled_check.sh
 
 **Alerting on a change, not on a state:** a line in `~/health/alerts.log` and in the journal
 (`journalctl -t lab-health`) only when a CRIT/WARN appears or clears. Some CRITs are permanent here by design
-(Region B's deferred destination in scenario `dg-a`; backup age on the RAC primary, whose backups run on the
-standby) — an alert on every run would be noise nobody reads. Tested: first run = baseline, second run =
+(Region B's deferred destination in scenario `dg-a`) — an alert on every run would be noise nobody reads. Tested: first run = baseline, second run =
 no alert, a simulated change → `new CRIT …` and `cleared WARN …`. The first test failed: `comm` needs both
 state files sorted with the same collation, and my test sorted with another locale than systemd's —
 the script now sets `LC_ALL=C`. No mail server in the lab: alerts are read with `labctl`/ssh.
@@ -176,5 +191,16 @@ Limit: the host's own free space is still checked by hand (`df` on the host) bef
 **Blind spot found while setting this up:** after the three failovers of 2026-10-29 evening the RAC is in
 incarnation 21 (20:58), and its newest level 0 (13:15) belongs to incarnation 18 — a restore from backup would
 fail like drill 1b (`ORA-01207`) until a new level 0 is taken; `RESTORE FROM SERVICE` (drill 1a) still works.
-`check_backup_health.sh` checks the age of the backups, not their incarnation, so it reports OK.
+`check_backup_health.sh` checked the age of the backups, not their incarnation, so it reported OK.
+
+**Fixed 2026-11-03 — backup age checked where the backups are** ([`health-check-backup-site-20261103.txt`](01-strategy/results/health-check-backup-site-20261103.txt)).
+Two faults of the same check: it ran the backup-age checks on the primary only, so the RAC primary reported
+"never backed up" every hour (its control file does not see the standby's backups — I had written that off as a
+permanent CRIT) while the standby, where the RAC backups really are, was not checked at all; and it ignored the
+incarnation. Now each host has `~/brlab/health.env` (`BACKUP_ROLE`: `PHYSICAL STANDBY` for the RAC, `PRIMARY` for
+orcl3; RAC archived logs `ARCH_MAX_H=26`, they are backed up with each level 0/1), the other side prints
+`OK backup age … (checked there)`, and only backups of the current incarnation count (a file unchanged since its
+backup — PDB$SEED — still counts). First run on the standby: **2 datafiles never backed up** — `UNDO_6` in
+DRILLPDB and SECPDB, created automatically on 2026-11-01 18:08, after the last level 0 (17:14) and level 1 (17:38).
+The old check could not see them.
 

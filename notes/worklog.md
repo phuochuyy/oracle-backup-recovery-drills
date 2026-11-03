@@ -143,3 +143,42 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   run on prm3 will show it after the next `install_scheduled_checks.sh prm3`.
 - What I tried first and dropped: ASM `thin_provisioned=TRUE` + rebalance on the standby FRA returned 0 MB to the
   host (one disk, nothing moved) — set back to FALSE.
+
+## 2026-11-03 — backup age checked on the wrong side (branch `fix/health-check-backup-site`)
+
+- **Problem:** `lab-health` on prm1 reported `CRIT backup base … 9999 h` every hour. I had documented it as an
+  expected, permanent CRIT (the RAC's backups run on the standby, the primary's control file does not list them).
+  The other half I had missed: on the standby the backup-age checks were skipped (`if role = PRIMARY`), so nothing
+  checked the RAC's backups at all. And the check ignored the incarnation (blind spot written down on 2026-10-30).
+- **Fix:** `BACKUP_ROLE` per host in `~/brlab/health.env` (written by `install_scheduled_checks.sh`); backup ages
+  only from backups of the current incarnation, or of files unchanged since (PDB$SEED).
+- **My slip on the way:** the first version filtered strictly by the current incarnation → PDB$SEED files #2, #4, #9
+  "never backed up". Their backup carries the resetlogs SCN of the incarnation they were last written in.
+- **Result:** prm1 `OK backup age (checked there)`; stb1 `CRIT … file #45 9999 h` — real: `UNDO_6` of DRILLPDB and
+  SECPDB (created 2026-11-01 18:08, after the last level 0/1) never backed up. Taken by the next level 0 offload.
+- **Lesson:** a "permanent, expected" CRIT is a check in the wrong place — move the check, do not accept the noise.
+
+## 2026-11-03 — no check saw that FSFO could not fail over (branch `fix/health-check-fsfo`)
+
+- **Problem (run 5 of the HA/DR lab):** after a hard reset of the primary (stb1, out of memory) the observer stayed
+  disconnected for 25 min and redo transport was UNSYNCHRONIZED. The planned power-off of the primary then caused
+  no failover. Correct behaviour in Zero Data Loss mode — but nothing had reported the state.
+- **Fix:** check 8 on a primary with FSFO enabled: `OK` only when SYNCHRONIZED with the observer present, else `CRIT`.
+  Hourly `lab-health` alerts on the change. Evidence: `01-strategy/results/health-check-fsfo-20261103.txt`.
+
+
+## Re-run after run 5 — the fix was in Git, not on the server
+
+- Before the level 0 offload after run 5, stb1 still had the **old** `backup_standby.sh` (passwords on the RMAN
+  command line): the 11-01 fix had been tested and committed, but the copy on stb1 was never replaced. Copied the repo
+  version before the backup; md5 on stb1 = md5 in Git (`42082a22…`). Level 0 offload rc=0, 500 s.
+- Lesson: "fixed" means deployed on every host that runs it, checked by md5 — not merged.
+
+## Re-run after run 5 — drill 1 password on the command line (branch `fix/drill1-password-stdin`)
+
+- **Problem:** `02-drills/01-lost-datafile/drill.sh` ran `rman target sys/<pw>@orcl catalog rco/<pw>@...` inside the
+  ssh command — visible in `ps` on prm1 and on the host. When I fixed `backup_standby.sh` on 11-01 I grepped only
+  that file's pattern, not every script that starts RMAN.
+- **Fix:** CONNECT lines inside the here-document (stdin), both methods. Test: drill 1a PASS, RTO 25 s; 61 `ps`
+  samples, 0 with a password; the log shows `connect target *`.
+- **Lesson:** after a class of bug is found, grep the whole repo for the class (`grep -rn 'PASSWORD@'`), not the file.

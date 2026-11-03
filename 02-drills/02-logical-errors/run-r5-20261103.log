@@ -1,0 +1,146 @@
+
+Session altered.
+
+Elapsed: 00:00:00.02
+== 2a: DROP TABLE bank.cards by mistake
+-- constraints and indexes of CARDS before:
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+CARDS_ACCOUNT_FK		 R ENABLED
+CARDS_ACCOUNT_ID_NN		 C ENABLED
+CARDS_CARD_ID_NN		 C ENABLED
+CARDS_EXPIRY_NN 		 C ENABLED
+CARDS_ISSUED_AT_NN		 C ENABLED
+CARDS_PAN_NN			 C ENABLED
+CARDS_PAN_UK			 U ENABLED
+CARDS_PK			 P ENABLED
+CARDS_STATUS_NN 		 C ENABLED
+
+9 rows selected.
+
+Elapsed: 00:00:01.34
+
+INDEX_NAME
+--------------------------------
+CARDS_PAN_UK
+CARDS_PK
+
+2 rows selected.
+
+Elapsed: 00:00:00.03
+
+Table dropped.
+
+Elapsed: 00:00:00.44
+rows will be truncated
+
+
+OBJECT_NAME															 ORIGINAL_NAME
+-------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------
+BIN$X2FWtiJSfVTgYwpoqMB7JQ==$0													 CARDS_PAN_UK
+BIN$X2FWtiJUfVTgYwpoqMB7JQ==$0													 CARDS
+BIN$X2FWtiJTfVTgYwpoqMB7JQ==$0													 CARDS_PK
+
+3 rows selected.
+
+Elapsed: 00:00:00.02
+
+Flashback complete.
+
+Elapsed: 00:00:00.07
+-- constraints and indexes of CARDS after FLASHBACK ... TO BEFORE DROP:
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+BIN$X2FWtiJKfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJLfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJMfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJNfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJOfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJPfVTgYwpoqMB7JQ==$0	 C ENABLED
+BIN$X2FWtiJQfVTgYwpoqMB7JQ==$0	 P ENABLED
+BIN$X2FWtiJRfVTgYwpoqMB7JQ==$0	 U ENABLED
+
+8 rows selected.
+
+Elapsed: 00:00:00.01
+
+INDEX_NAME
+--------------------------------
+BIN$X2FWtiJSfVTgYwpoqMB7JQ==$0
+BIN$X2FWtiJTfVTgYwpoqMB7JQ==$0
+
+2 rows selected.
+
+Elapsed: 00:00:00.00
+-- fix: rename the BIN$ objects, re-create the foreign key Flashback Drop does not bring back
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:01.07
+
+Table altered.
+
+Elapsed: 00:00:00.05
+
+CONSTRAINT_NAME 		 C STATUS
+-------------------------------- - --------
+CARDS_ACCOUNT_FK		 R ENABLED
+CARDS_ACCOUNT_ID_NN		 C ENABLED
+CARDS_CARD_ID_NN		 C ENABLED
+CARDS_EXPIRY_NN 		 C ENABLED
+CARDS_ISSUED_AT_NN		 C ENABLED
+CARDS_PAN_NN			 C ENABLED
+CARDS_PAN_UK			 U ENABLED
+CARDS_PK			 P ENABLED
+CARDS_STATUS_NN 		 C ENABLED
+
+9 rows selected.
+
+Elapsed: 00:00:00.02
+== 2b: a bad batch zeroes 1/7 of the balances and commits
+
+Table altered.
+
+Elapsed: 00:00:00.01
+
+
+
+
+1 row selected.
+
+Elapsed: 00:00:00.01
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:02.01
+
+4285 rows updated.
+
+Elapsed: 00:00:00.04
+
+Commit complete.
+
+Elapsed: 00:00:00.03
+-- investigate with a versions query: what changed, when, by which transaction
+old   2: from bank.accounts versions between scn &scn_before and maxvalue
+new   2: from bank.accounts versions between scn  114872733 and maxvalue
+
+ROWS_CHANGED FIRST_CHANGE								 XID
+------------ --------------------------------------------------------------------------- ----------------
+	4285 03-NOV-26 09.47.17 PM							 0700050007030000
+
+1 row selected.
+
+Elapsed: 00:00:00.10
+old   1: flashback table bank.accounts to scn &scn_before
+new   1: flashback table bank.accounts to scn  114872733
+
+Flashback complete.
+
+Elapsed: 00:07:08.97
+
+Table altered.
+
+Elapsed: 00:00:00.08

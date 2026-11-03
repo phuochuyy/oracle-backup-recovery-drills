@@ -11,6 +11,13 @@
 # usage: ./check_backup_health.sh   (env: L0_MAX_H=170 L1_MAX_H=26 ARCH_MAX_H=1 FRA_WARN=80 FRA_CRIT=90
 #        DATA_WARN=80 DATA_CRIT=90 FS_WARN=80 FS_CRIT=90 GAP_WARN_MB=1024)
 . ~/.bash_profile >/dev/null 2>&1
+# per-host settings written by install_scheduled_checks.sh (BACKUP_ROLE, thresholds)
+[ -f ~/brlab/health.env ] && . ~/brlab/health.env
+# Where this database's backups are taken: PRIMARY (orcl3, timers) or PHYSICAL STANDBY (the RAC offloads its
+# backups to the standby). The backup-age checks run on that side only. Until 2026-11-03 they ran on the
+# primary only: the RAC primary reported "never backed up" every hour (its control file does not see the
+# standby's backups) and nothing checked the side where the backups really are.
+BACKUP_ROLE=${BACKUP_ROLE:-PRIMARY}
 L0_MAX_H=${L0_MAX_H:-170} L1_MAX_H=${L1_MAX_H:-26} ARCH_MAX_H=${ARCH_MAX_H:-1}
 FRA_WARN=${FRA_WARN:-80} FRA_CRIT=${FRA_CRIT:-90}
 DATA_WARN=${DATA_WARN:-80} DATA_CRIT=${DATA_CRIT:-90} FS_WARN=${FS_WARN:-80} FS_CRIT=${FS_CRIT:-90} GAP_WARN_MB=${GAP_WARN_MB:-1024}
@@ -27,7 +34,10 @@ line OK role "$(q "select db_unique_name || ' ' || database_role || ' ' || open_
 #    recent although the database's L0 was older. A level 1 of a file created after the L0 has
 #    incremental_change# = creation_change# (all blocks): RMAN restores from it (RESTORE ... PREVIEW),
 #    so it counts as a base. Files never backed up count as 9999 h.
-if [ "$role" = PRIMARY ]; then
+#    Only backups of the current incarnation count: after a failover the previous level 0 cannot be used
+#    (ORA-01207 in drill 1b) although it is recent. Exception: a file unchanged since its backup (PDB$SEED:
+#    its backup carries the resetlogs SCN of the incarnation the file was last written in).
+if [ "$role" = "$BACKUP_ROLE" ]; then
   # a file unchanged since its last backup (checkpoint SCN not moved: PDB$SEED, read-only tablespaces) is
   # skipped by BACKUP OPTIMIZATION and needs no new backup — counted as current (it made PDB$SEED's files
   # CRIT 36 h after the level 0 on 2026-10-29)
@@ -38,6 +48,8 @@ if [ "$role" = PRIMARY ]; then
         select case when d.checkpoint_change# <= max(b.checkpoint_change#) then 0
                     else nvl((sysdate - max(b.completion_time)) * 24, 9999) end h, d.file#
           from v\$datafile d left join v\$backup_datafile b on b.file# = d.file# and $cond
+               and (b.resetlogs_change# = (select resetlogs_change# from v\$database_incarnation where status = 'CURRENT')
+                    or b.checkpoint_change# >= d.checkpoint_change#)
          group by d.file#, d.checkpoint_change# order by 1 desc, 2) where rownum = 1;")"
     awk -v h="$h" -v m="$max" 'BEGIN { exit !(h <= m) }' && s=OK || s=CRIT
     line $s "backup $name" "oldest file #$f: ${h} h ago (max $max h)"
@@ -45,6 +57,8 @@ if [ "$role" = PRIMARY ]; then
   h=$(q "select to_char(nvl((sysdate - max(completion_time)) * 24, 9999), 'FM99990.0') from v\$backup_set_details where backup_type = 'L';")
   awk -v h="$h" -v m="$ARCH_MAX_H" 'BEGIN { exit !(h <= m) }' && s=OK || s=WARN
   line $s "backup archivelog" "last ${h} h ago (max $ARCH_MAX_H h)"
+else
+  line OK "backup age" "backups are taken on the $(echo "$BACKUP_ROLE" | tr A-Z a-z) side (checked there)"
 fi
 
 # 2. RMAN jobs that failed in the last 24 h
@@ -137,6 +151,19 @@ if [ "$role" = PRIMARY ]; then
     s=OK; [ "${mb:-0}" -ge "$GAP_WARN_MB" ] && s=WARN; [ "${del:-0}" -gt 0 ] && s=WARN
     line $s "redo gap dest $d" "$st: ${mb:-0} MB in ${n:-0} archived logs not received$( [ "${del:-0}" -gt 0 ] && echo ", $del already deleted here (restore needed)")"
   done < <(q "select dest_id || ' ' || status from v\$archive_dest where target = 'STANDBY' and destination is not null and status <> 'INACTIVE';")
+fi
+
+# 8. primary with Fast-Start Failover: the observer is there and the target is synchronized. On 2026-11-03 the
+#    observer hung after the primary was reset ("Primary database cannot be reached" for 25 min) and redo transport
+#    fell back to UNSYNCHRONIZED; a power-off of the primary then caused no failover — and nothing had said so.
+if [ "$role" = PRIMARY ]; then
+  read -r fs ob tg <<< "$(q "select replace(fs_failover_status, ' ', '_') || ' ' || fs_failover_observer_present || ' ' || nvl(fs_failover_current_target, '-') from v\$database;")"
+  case $fs in
+    DISABLED|"") ;;
+    SYNCHRONIZED) [ "$ob" = YES ] && line OK "fsfo" "$fs, observer present, target $tg" \
+                                  || line CRIT "fsfo" "$fs but observer NOT present (target $tg): no automatic failover" ;;
+    *) line CRIT "fsfo" "$fs, observer present=$ob (target $tg): a failover now could not be automatic" ;;
+  esac
 fi
 
 exit $crit

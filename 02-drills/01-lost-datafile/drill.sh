@@ -4,6 +4,7 @@
 #   method backup  : copy the standby's backup pieces to prm1, CATALOG them, RESTORE + RECOVER
 # RTO = from the failed PDB open (ORA-01157) to the PDB open again with verified data.
 # usage (from the host): DB_PASSWORD=... RCO_PASSWORD=... ./drill.sh service|backup
+# Passwords travel inside the here-document (ssh stdin), never on the ssh or rman command line (ps).
 set -eu
 method=$1; : "${DB_PASSWORD:?}" "${RCO_PASSWORD:?}"
 out=$(cd "$(dirname "$0")" && pwd)/run-$method.log; : > "$out"
@@ -26,7 +27,9 @@ t0=$(ts)
 
 if [ "$method" = service ]; then
   say "restore from the standby over the network"
-  $P ". ~/.bash_profile >/dev/null 2>&1; rman target sys/$DB_PASSWORD@orcl catalog $CAT" >> "$out" 2>&1 <<RMAN
+  $P ". ~/.bash_profile >/dev/null 2>&1; rman" >> "$out" 2>&1 <<RMAN
+connect target "sys/${DB_PASSWORD}@orcl"
+connect catalog "$CAT"
 restore datafile $fno from service orcl_stb;
 recover datafile $fno;
 RMAN
@@ -36,7 +39,9 @@ else
   ssh -o BatchMode=yes root@prm1 "mkdir -p /u02/backup/orcl_from_stb && chown oracle:oinstall /u02/backup/orcl_from_stb"
   for p in $pieces; do ssh -o BatchMode=yes oracle@stb1 "cat $p" | $P "cat > /u02/backup/orcl_from_stb/$(basename $p)"; done
   say "copied $(echo $pieces | wc -w) piece(s)"
-  $P ". ~/.bash_profile >/dev/null 2>&1; rman target / catalog $CAT" >> "$out" 2>&1 <<RMAN
+  $P ". ~/.bash_profile >/dev/null 2>&1; rman" >> "$out" 2>&1 <<RMAN
+connect target /
+connect catalog "$CAT"
 catalog start with '/u02/backup/orcl_from_stb/' noprompt;
 restore datafile $fno;
 recover datafile $fno;

@@ -23,7 +23,7 @@ Logs: [`run-service.log`](run-service.log), [`run-backup.log`](run-backup.log).
 
 Since the security lab, DRILLPDB's `BANK_DATA` is TDE-encrypted (auto-login keystores on both sites) and
 native network encryption is required on the RAC. `service` method re-run twice: **PASS**, RTO **49 s and
-45 s** ([`run-service-after-tde.log`](run-service-after-tde.log)) instead of 14 s.
+45 s** ([`run-service-after-tde.log`](run-service-after-tde.log); it holds the second run only — the drill script overwrote the log of the first, 49 s, run) instead of 14 s.
 
 The RMAN work itself did not change: restore 3 s, recover 2 s, same as before. The extra time is around it:
 RMAN start alone took ~7 s on prm1 (measured with a no-catalog connect), each of the two full catalog
