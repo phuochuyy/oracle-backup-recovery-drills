@@ -38,11 +38,11 @@ EOF
   done
   unset wpw
   scp -q "$D/rac_backup_job.sh" oracle@$n:/tmp/rac_backup_job.sh
-  scp -q "$D/systemd/rac-backup@.service" "$D/systemd/rac-backup-0.timer" "$D/systemd/rac-backup-1.timer" root@$n:/etc/systemd/system/
+  scp -q "$D/systemd/rac-backup@.service" "$D/systemd/rac-backup-0.timer" "$D/systemd/rac-backup-1.timer" "$D/systemd/rac-backup-validate.timer" root@$n:/etc/systemd/system/
   ssh -o BatchMode=yes root@$n 'mkdir -p /u02/backup/bin && chown oracle:oinstall /u02/backup /u02/backup/bin
     install -o oracle -g oinstall -m 750 /tmp/rac_backup_job.sh /u02/backup/bin/rac_backup_job.sh && rm -f /tmp/rac_backup_job.sh
-    systemctl daemon-reload && systemctl enable --now rac-backup-0.timer rac-backup-1.timer >/dev/null 2>&1
-    systemctl list-timers rac-backup-0.timer rac-backup-1.timer --no-pager | sed -n "2,3p"'
+    systemctl daemon-reload && systemctl enable --now rac-backup-0.timer rac-backup-1.timer rac-backup-validate.timer >/dev/null 2>&1
+    systemctl list-timers rac-backup-0.timer rac-backup-1.timer rac-backup-validate.timer --no-pager | sed -n "2,4p"'
   # every alias through the wallet, no password typed
   ssh -o BatchMode=yes oracle@$n 'bash -s' <<'EOF'
 . ~/.bash_profile >/dev/null 2>&1; export TNS_ADMIN=$HOME/rman_tns

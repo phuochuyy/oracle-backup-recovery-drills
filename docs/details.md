@@ -13,6 +13,7 @@
 | Retention | recovery window of 7 days |
 | Backups | level 0 weekly, level 1 daily, archived logs every 30 min (systemd timers, [`01-strategy/systemd`](../01-strategy/systemd)) |
 | Format | compressed backupsets, `BASIC` algorithm (EE; LOW/MEDIUM/HIGH need Advanced Compression), 2 channels |
+| Encryption | AES256 with the TDE keystore (transparent mode), both databases; needs Advanced Security. A restore needs the keystore, so its off-host copy is part of recovery ([evidence](../01-strategy/results/r6-encrypted-backup-20261107.txt)) |
 | Location | `/u02/backup` on a different virtual disk than the datafiles |
 | Block change tracking | enabled — level 1 read 0.1 % of blocks (1,135 of 1,823,744 = 0.062 %) |
 | Archived log deletion | applied on the standby **and** backed up once ([why](../notes/worklog.md)) |

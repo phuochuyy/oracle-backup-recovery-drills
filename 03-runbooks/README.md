@@ -13,6 +13,8 @@ measured one on a small lab database). Start with the first column.
 
 ## Before any of them
 
+0. **Backups are encrypted with the TDE keystore.** Check `V$ENCRYPTION_WALLET` is `OPEN` before a restore. If the keystore itself is lost,
+   copy it back from the off-host copy first: without it no piece can be read.
 1. **Stop and write down the time** and the first error text. Do not restart things repeatedly.
 2. Is there a **standby**? For a primary with a SYNC standby, failover may be faster and lose nothing —
    decide with the business, do not repair the primary just because you can.

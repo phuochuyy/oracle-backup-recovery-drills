@@ -17,4 +17,8 @@ CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/u02/backup/orcl3/%d_%T_%U';
 # 'APPLIED ON ALL STANDBY' the 10-minute housekeeping job could delete a log before the next
 # backup, leaving a gap that makes point-in-time recovery into that window impossible.
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;
+# Every backup encrypted with the TDE keystore (transparent mode): a stolen piece is unreadable, and a restore needs the
+# keystore, so its off-host copy is part of the recovery plan. Needs Oracle Advanced Security.
+CONFIGURE ENCRYPTION ALGORITHM 'AES256';
+CONFIGURE ENCRYPTION FOR DATABASE ON;
 SHOW ALL;

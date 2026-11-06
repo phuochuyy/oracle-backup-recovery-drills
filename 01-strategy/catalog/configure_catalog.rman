@@ -1,5 +1,6 @@
 # Run from prm1 (primary orcl) connected to the catalog:
-#   rman target / catalog rco/<pw>@//prm3.rac:1521/rcat.rac cmdfile=\"01-strategy/catalog/configure_catalog.rman\"
+#   rman target / <<< 'connect catalog rco@//prm3.rac:1521/rcat.rac' ...  (password at the prompt, never on the command line)
+# First time only: CREATE CATALOG and REGISTER stop a second run; later changes are run on their own.
 # Settings that differ per database are stored FOR DB_UNIQUE_NAME in the catalog.
 CREATE CATALOG;
 REGISTER DATABASE;
@@ -22,4 +23,9 @@ CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u02/backup/orc
 # with the catalog the primary sees the standby's backups, so both can require "backed up once"
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl;
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl_stb;
+# Every backup encrypted with the TDE keystore: see ../configure.rman. On both databases, because after a failover roles swap.
+CONFIGURE ENCRYPTION ALGORITHM 'AES256' FOR DB_UNIQUE_NAME orcl;
+CONFIGURE ENCRYPTION FOR DATABASE ON FOR DB_UNIQUE_NAME orcl;
+CONFIGURE ENCRYPTION ALGORITHM 'AES256' FOR DB_UNIQUE_NAME orcl_stb;
+CONFIGURE ENCRYPTION FOR DATABASE ON FOR DB_UNIQUE_NAME orcl_stb;
 SHOW ALL FOR DB_UNIQUE_NAME orcl_stb;

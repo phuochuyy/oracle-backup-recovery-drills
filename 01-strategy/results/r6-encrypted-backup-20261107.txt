@@ -1,0 +1,17 @@
+# Encrypted backups on orcl3: first level 0 and its proof (run 6)
+
+## RMAN configuration
+CONFIGURE ENCRYPTION FOR DATABASE ON;
+CONFIGURE ENCRYPTION ALGORITHM 'AES256';
+
+## Backup pieces of the run (V$BACKUP_PIECE_DETAILS, ENC = encrypted, COM = compressed)
+
+ENC COM 	 N	   MB FIRST_T	  LAST_T
+--- --- ---------- ---------- ----------- -----------
+YES YES 	17	 3010 11-07 02:00 11-07 03:00
+NO  YES 	28	 3875 11-07 01:22 11-07 02:33
+
+## 01-strategy/validate.sh on the same backups: restore database validate + archived logs since the level 0
+Finished restore, twice, no RMAN or ORA errors. validate elapsed 162 s
+
+Level 0 run: backup_0_20261107_023830.log, 155 s of wall time for the job. Restores read the keystore: without it they fail.
