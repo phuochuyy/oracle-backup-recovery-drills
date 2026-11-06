@@ -14,4 +14,4 @@ NO  YES 	28	 3875 11-07 01:22 11-07 02:33
 ## 01-strategy/validate.sh on the same backups: restore database validate + archived logs since the level 0
 Finished restore, twice, no RMAN or ORA errors. validate elapsed 162 s
 
-Level 0 run: backup_0_20261107_023830.log, 155 s of wall time for the job. Restores read the keystore: without it they fail.
+Level 0 run: backup_0_20261107_023830.log, 155 s of wall time for the job. Not tested: a restore without the keystore.
