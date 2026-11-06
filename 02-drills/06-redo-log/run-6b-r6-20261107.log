@@ -1,0 +1,54 @@
+06:03:40 group 12 (INACTIVE, archived): delete both members: /u02/oradata/ORCL3/redo/redo12.log /u02/redo2/redo12b.log
+06:03:40 health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #33: 3.4 h ago (max 170 h)
+OK   backup L0/L1           oldest file #33: 3.4 h ago (max 26 h)
+OK   backup archivelog      last 0.1 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job 0           last run Sat 2026-11-07 02:41:04 +07: success
+OK   backup job 1           last run Sat 2026-11-07 02:00:14 +07: success
+OK   backup job arch        last run Sat 2026-11-07 06:00:32 +07: success
+OK   fra used               40 % (reclaimable 1 %)
+CRIT redo member            group 12: /u02/oradata/ORCL3/redo/redo12.log MISSING on disk
+CRIT redo member            group 12: /u02/redo2/redo12b.log MISSING on disk
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+OK   fs /                   76 % used, 7505 MB free
+OK   fs /u02/oradata        66 % used, 13954 MB free
+WARN redo gap dest 2        DEFERRED: 7678 MB in 79 archived logs not received, 67 already deleted here (restore needed)
+06:03:42 the database itself does not notice:
+12 /u02/oradata/ORCL3/redo/redo12.log OK
+12 /u02/redo2/redo12b.log OK
+06:03:42 repair: re-check status, CLEAR LOGFILE GROUP 12 (re-creates both members)
+-rw-r----- 1 oracle oinstall 209715712 Nov  7 06:03 /u02/oradata/ORCL3/redo/redo12.log
+-rw-r----- 1 oracle oinstall 209715712 Nov  7 06:03 /u02/redo2/redo12b.log
+06:03:45 switch through all groups, then health check
+OK   role                   orcl3 PRIMARY READ WRITE
+OK   backup base            oldest file #33: 3.4 h ago (max 170 h)
+OK   backup L0/L1           oldest file #33: 3.4 h ago (max 26 h)
+OK   backup archivelog      last 0.1 h ago (max 1 h)
+OK   rman failures 24h      0
+OK   backup job 0           last run Sat 2026-11-07 02:41:04 +07: success
+OK   backup job 1           last run Sat 2026-11-07 02:00:14 +07: success
+OK   backup job arch        last run Sat 2026-11-07 06:00:32 +07: success
+OK   fra used               41 % (reclaimable 1 %)
+OK   redo members           12 online members
+OK   archive dest 1         VALID
+CRIT archive dest 2         DEFERRED 
+OK   gg capture OGG$CAP_EXTB ENABLED
+OK   fs /                   76 % used, 7505 MB free
+OK   fs /u02/oradata        67 % used, 13817 MB free
+WARN redo gap dest 2        DEFERRED: 7815 MB in 86 archived logs not received, 67 already deleted here (restore needed)
+06:03:48 alert log since the drill:
+      1 alter database clear logfile group 12
+      1 Clearing online log 12 of thread 1 sequence number 704
+      1 Completed: alter database clear logfile group 12
+      1         CORRUPTION ERROR = ORA-01578 
+      3 ORA-00312: online log 12 thread 1: '/u02/oradata/ORCL3/redo/redo12.log'
+      3 ORA-00312: online log 12 thread 1: '/u02/redo2/redo12b.log'
+      3 ORA-00313: open failed for members of log group 12 of thread 1
+      1 ORA-01110: data file 26: '/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_ogwbklr5_.dbf'
+      6 ORA-27037: unable to obtain file status
+      1 ORA-28304: Oracle encrypted block is corrupt (file # 26, block # 9144)
+06:03:49 RTO 6 s (from detection to health OK)
