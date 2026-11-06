@@ -215,3 +215,13 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - The first run lost its RMAN log (`/u02/backup` is root-owned on stb3) — now under `/home/oracle/rman_logs`.
 - Side effect found at the switchover: the restored control file names redo log directories that exist only on prm3
   (HA/DR finding F16).
+
+## Encrypted backups and a weekly restore check for the RAC
+
+- `CONFIGURE ENCRYPTION FOR DATABASE ON` on orcl3 and, through the catalog, on orcl and orcl_stb. Every container already had a master key.
+- First encrypted level 0 on orcl3 proved with `validate.sh`. The RAC's next level 0 is taken after the failover tests, because each failover opens a new incarnation.
+- `rac_backup_job.sh validate` and a Sunday timer: the RAC's backups had no scheduled proof, only orcl3's did.
+- Disk: the VM's root disk reached 95 % (backups share it with the OS) and the host 2.4 GB after a test burst of redo. Retention of 7 days with a weekly level 0 keeps up to two weeks of
+  backups: more than this lab's disk can hold. With approval, one `DELETE OBSOLETE RECOVERY WINDOW OF 3 DAYS` on orcl3 (5.9 GB expected, host 4.9 to 10.9 GB); the configured window stays 7 days. On a real system
+  shortening a recovery window is the data owner's decision, not a disk fix.
+

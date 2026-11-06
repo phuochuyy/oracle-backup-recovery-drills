@@ -8,11 +8,16 @@
 # Credentials: auto-login wallet (secure external password store) in ~/rman_tns with its own TNS_ADMIN, made by
 # install_rac_backup.sh — no password in any file or on any command line. The database home's sqlnet.ora is
 # left alone (labctl manages it).
-# usage (as oracle): rac_backup_job.sh 0|1        log: /u02/backup/logs/rac_L<lvl>_<time>.log
+# usage (as oracle): rac_backup_job.sh 0|1|validate        log: /u02/backup/logs/rac_L<lvl>_<time>.log
+#   validate: RESTORE DATABASE VALIDATE through the catalog: RMAN reads the pieces and checks every block, restores nothing.
 . ~/.bash_profile >/dev/null 2>&1
 set -eu
-lvl=${1:?usage: rac_backup_job.sh 0|1}
-case $lvl in 0|1) ;; *) echo "level must be 0 or 1"; exit 2 ;; esac
+lvl=${1:?usage: rac_backup_job.sh 0|1|validate}
+case $lvl in
+  0|1)     cmd="backup incremental level $lvl database tag 'STB_L$lvl' plus archivelog not backed up 1 times tag 'STB_ARCH';" ;;
+  validate) cmd="restore database validate;" ;;
+  *) echo "level must be 0, 1 or validate"; exit 2 ;;
+esac
 export TNS_ADMIN=$HOME/rman_tns
 me=$(hostname -s)
 mkdir -p /u02/backup/orcl /u02/backup/logs
@@ -46,7 +51,7 @@ RMAN
 rman log="$log" <<RMAN || rc=$?
 connect target /@$dbu
 connect catalog /@rcat_lab
-backup incremental level $lvl database tag 'STB_L$lvl' plus archivelog not backed up 1 times tag 'STB_ARCH';
+$cmd
 RMAN
 # the backup must have run on this standby's instances, never on the primary's
 chan=$(grep -oE "instance=[a-z0-9_]+" "$log" | sort -u | sed 's/^instance=//')
@@ -54,6 +59,6 @@ bad=$(echo "$chan" | grep -vxE "${dbu}[0-9]+" || true)   # orcl_stb1 must not pa
 [ -n "$chan" ] && [ -z "$bad" ] || { echo "$me: channels not only on $dbu instances ($(echo $chan)) — check $log"; rc=1; }
 # rc=0 is not enough: a backup the catalog did not record is useless for a restore through the catalog
 if grep -q "ORA-20079" "$log"; then echo "ORA-20079: backup NOT recorded in the catalog"; rc=1; fi
-echo "$me: $dbu standby level $lvl rc=$rc elapsed $(( $(date +%s) - start )) s, log $log"
+echo "$me: $dbu standby $lvl rc=$rc elapsed $(( $(date +%s) - start )) s, log $log"
 grep -E "RMAN-|ORA-" "$log" | grep -vE "RMAN-08120|RMAN-08137" | head -n 5 || true
 exit $rc

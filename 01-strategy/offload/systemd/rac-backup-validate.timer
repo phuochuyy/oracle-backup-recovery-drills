@@ -1,0 +1,11 @@
+[Unit]
+Description=RAC backups proven on the standby: restore validate every Sunday after the level 0
+# Not Persistent: it reads every backup piece, and caught up at boot it would compete with the lab starting.
+
+[Timer]
+OnCalendar=Sun *-*-* 05:30:00
+Persistent=false
+Unit=rac-backup@validate.service
+
+[Install]
+WantedBy=timers.target
