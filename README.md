@@ -14,6 +14,7 @@ Every drill is timed, and the data is checked with checksums afterwards.
 
 ## Where to look
 
+- [Strategy](docs/strategy.md)
 - [Strategy, drill results and incident](docs/details.md)
 - [Drills](02-drills/)
 - [Runbooks](03-runbooks/README.md)
