@@ -31,7 +31,7 @@ SQL
 # a run caught up at boot (Persistent=true) may start before the instance: wait up to 15 min
 info=""; for i in $(seq 1 90); do info=$(dbinfo); [ -n "$info" ] && break; sleep 10; done
 [ -n "$info" ] || { echo "$me: no instance after 15 min, backup NOT run"; exit 1; }
-read -r role dbu om <<< "$info"
+read -r role dbu _ <<< "$info"
 [ "$role" = PHYSICAL_STANDBY ] || { echo "$me: $dbu is $role — the RAC is backed up on its standby, skip"; exit 0; }
 first=$(srvctl status database -db "$dbu" | awk '/is running on node/ {print $NF}' | sort | head -n 1)
 [ "$first" = "$me" ] || { echo "$me: $first takes the backup for $dbu, skip"; exit 0; }
@@ -52,13 +52,19 @@ rman log="$log" <<RMAN || rc=$?
 connect target /@$dbu
 connect catalog /@rcat_lab
 $cmd
+resync catalog;
 RMAN
 # the backup must have run on this standby's instances, never on the primary's
 chan=$(grep -oE "instance=[a-z0-9_]+" "$log" | sort -u | sed 's/^instance=//')
 bad=$(echo "$chan" | grep -vxE "${dbu}[0-9]+" || true)   # orcl_stb1 must not pass as orcl
 [ -n "$chan" ] && [ -z "$bad" ] || { echo "$me: channels not only on $dbu instances ($(echo $chan)) — check $log"; rc=1; }
-# rc=0 is not enough: a backup the catalog did not record is useless for a restore through the catalog
-if grep -q "ORA-20079" "$log"; then echo "ORA-20079: backup NOT recorded in the catalog"; rc=1; fi
+# rc=0 is not enough: a backup the catalog did not record is useless for a restore through the catalog. Ask the catalog.
+# ORA-20079 alone proves nothing: RMAN can hit it, resync from the primary by itself and finish (run 6).
+piece=$(grep -oE 'piece handle=[^ ]+' "$log" | grep -v '/cf_c-' | tail -n 1 | cut -d= -f2 || true)
+if [ -n "$piece" ]; then
+  n=$(printf "set heading off feedback off pages 0\nselect count(*) from rc_backup_piece where handle = '%s';\nexit\n" "$piece" | sqlplus -s -L /@rcat_lab | tr -dc 0-9)
+  [ "${n:-0}" -ge 1 ] || { echo "$me: last piece NOT recorded in the catalog: $piece"; rc=1; }
+fi
 echo "$me: $dbu standby $lvl rc=$rc elapsed $(( $(date +%s) - start )) s, log $log"
 grep -E "RMAN-|ORA-" "$log" | grep -vE "RMAN-08120|RMAN-08137" | head -n 5 || true
 exit $rc

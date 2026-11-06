@@ -10,6 +10,7 @@ out=$(cd "$(dirname "$0")" && pwd)/run-6b.log; : > "$out"
 say() { echo "$(date +%T) $*" | tee -a "$out"; }
 P="ssh -o BatchMode=yes oracle@prm3"
 q() { printf "set heading off feedback off pages 0 lines 500\n%s\nexit\n" "$1" | $P ". ~/.bash_profile >/dev/null 2>&1; sqlplus -s / as sysdba" | sed -E 's/^[[:space:]]+//' | grep -vE "^$"; }
+# shellcheck disable=SC2088  # the tilde is expanded on the VM
 health() { $P "~/brlab/04-scripts/check_backup_health.sh" | tee -a "$out" | grep -E "^CRIT|redo" || true; }
 
 g=$(q "select min(group#) from v\$log where status = 'INACTIVE' and archived = 'YES';")
@@ -35,4 +36,4 @@ health
 t1=$(date +%s.%N)
 say "alert log since the drill:"
 $P "awk '/^$(date +%Y-%m-%dT%H:%M -d @${t0%.*})/{f=1} f' /u01/app/oracle/diag/rdbms/orcl3/ORCL3/trace/alert_ORCL3.log | grep -E 'ORA-|Clearing|clear' | sort | uniq -c" | tee -a "$out" || true
-say "RTO $(printf '%.0f' $(echo "$t1 - $t0" | bc)) s (from detection to health OK)"
+say "RTO $(printf '%.0f' "$(echo "$t1 - $t0" | bc)") s (from detection to health OK)"

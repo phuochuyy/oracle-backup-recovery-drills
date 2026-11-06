@@ -24,8 +24,8 @@ CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/u02/backup/orc
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl;
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK FOR DB_UNIQUE_NAME orcl_stb;
 # Every backup encrypted with the TDE keystore: see ../configure.rman. On both databases, because after a failover roles swap.
-CONFIGURE ENCRYPTION ALGORITHM 'AES256' FOR DB_UNIQUE_NAME orcl;
-CONFIGURE ENCRYPTION FOR DATABASE ON FOR DB_UNIQUE_NAME orcl;
-CONFIGURE ENCRYPTION ALGORITHM 'AES256' FOR DB_UNIQUE_NAME orcl_stb;
-CONFIGURE ENCRYPTION FOR DATABASE ON FOR DB_UNIQUE_NAME orcl_stb;
+# FOR DB_UNIQUE_NAME did not reach the standby for encryption (the command reported success, the catalog held ORCL only and the level 0 came out unencrypted).
+# Run these two connected to each site in turn, target /@orcl and target /@orcl_stb, and check with SHOW:
+CONFIGURE ENCRYPTION ALGORITHM 'AES256';
+CONFIGURE ENCRYPTION FOR DATABASE ON;
 SHOW ALL FOR DB_UNIQUE_NAME orcl_stb;

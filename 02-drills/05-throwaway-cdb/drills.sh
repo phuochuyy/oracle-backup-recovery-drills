@@ -15,7 +15,7 @@ sql()  { $S "$ENV; sqlplus -s / as sysdba" 2>&1 | tee -a "$out"; }
 rman() { $S "$ENV; rman target /" >> "$out" 2>&1 || true; }
 val()  { printf "set heading off feedback off pages 0 lines 500\n$1\nexit\n" | $S "$ENV; sqlplus -s / as sysdba" | grep -vE "^$" | head -n 50; }
 verify() { $S "cd ~/brlab; VERIFY_SID=DRILL BANKDB_DIR=~/bankdb ./04-scripts/verify_drillpdb.sh" | tee -a "$out"; }
-rto() { say "RTO $(printf '%.0f' $(echo "$(ts) - $1" | bc)) s ($case_)"; }
+rto() { say "RTO $(printf '%.0f' "$(echo "$(ts) - $1" | bc)") s ($case_)"; }
 errs() { grep -E "RMAN-0[0-9]|ORA-" "$out" | grep -vE "RMAN-08120|RMAN-08137|$1" | head -n 5 || true; }
 
 case $case_ in
