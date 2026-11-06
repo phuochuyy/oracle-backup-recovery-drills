@@ -131,6 +131,18 @@ file #33): `CRIT backup L0/L1 ... 9999 h` → the level 1 job (RMAN backs up a n
 
 DRILLPDB checksums identical afterwards (all 5 tables).
 
+## Re-check 2026-11-07 (with the HA/DR run 6), backups now encrypted
+
+| Drill | Result | Log |
+|-------|--------|-----|
+| 1a datafile from the standby | PASS, RTO 49 s | [`run-service-r6-20261107.log`](../02-drills/01-lost-datafile/run-service-r6-20261107.log) |
+| 1b datafile from the standby's **encrypted** level 0, through the catalog, after 2 failovers | PASS, RTO 44 s | [`run-backup-r6-20261107.log`](../02-drills/01-lost-datafile/run-backup-r6-20261107.log) |
+| 2 Flashback Drop and Table | PASS; Flashback Table 7 min 24 s (unindexed child foreign keys, kept on purpose, see 2b) | [`run-r6-20261107.log`](../02-drills/02-logical-errors/run-r6-20261107.log) |
+| 3 corrupted block, from the **encrypted** level 0 on orcl3 | PASS, RTO 26 s, PDB stayed open | [`run-r6-20261107.log`](../02-drills/03-block-corruption/run-r6-20261107.log) |
+| 6b whole redo group lost | PASS, 6 s from detection to OK | [`run-6b-r6-20261107.log`](../02-drills/06-redo-log/run-6b-r6-20261107.log) |
+
+Drills 4 and 5 were not repeated: they need more host disk than was free. Their results below are from before encryption. Restore with the keystore unavailable was not tested. Evidence for the encrypted backups: [orcl3](../01-strategy/results/r6-encrypted-backup-20261107.txt), [RAC](../01-strategy/results/r6-rac-encrypted-20261107.txt).
+
 ## Re-check 2026-11-03 (with the HA/DR run 5)
 
 | Drill | Result | Log |

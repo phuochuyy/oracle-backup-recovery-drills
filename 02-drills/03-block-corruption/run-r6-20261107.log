@@ -1,0 +1,102 @@
+06:03:07 ACCOUNTS row 1234 is in file #26 block 9144 (/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_ogwbklr5_.dbf)
+06:03:08 overwrite block 9144 with zeros (dd, direct IO) and flush the buffer cache
+
+System altered.
+
+06:03:09 read the row
+ORA-28304: Oracle encrypted block is corrupt (file # 26, block # 9144)
+ORA-01110: data file 26:
+06:03:11 find all corrupt blocks: VALIDATE DATAFILE
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Sat Nov 7 06:03:11 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> validate datafile 26;
+Starting validate at 07-NOV-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=312 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=75 device type=DISK
+channel ORA_DISK_1: starting validation of datafile
+channel ORA_DISK_1: specifying datafile(s) for validation
+input datafile file number=00026 name=/u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_ogwbklr5_.dbf
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:01
+List of Datafiles
+=================
+File Status Marked Corrupt Empty Blocks Blocks Examined High SCN
+---- ------ -------------- ------------ --------------- ----------
+26   FAILED 0              27847        65536           45355921  
+  File Name: /u02/oradata/ORCL3/ORCL3/5ED75E92D4C4500AE0630A6AA8C0EA9D/datafile/o1_mf_bank_dat_ogwbklr5_.dbf
+  Block Type Blocks Failing Blocks Processed
+  ---------- -------------- ----------------
+  Data       0              91              
+  Index      0              114             
+  Other      1              37484           
+
+validate found one or more corrupt blocks
+See trace file /u01/app/oracle/diag/rdbms/orcl3/ORCL3/trace/ORCL3_ora_156415.trc for details
+Finished validate at 07-NOV-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+
+     FILE#     BLOCK#	  BLOCKS CORRUPTIO
+---------- ---------- ---------- ---------
+	26	 9144	       1 ALL ZERO
+
+06:03:19 repair: RECOVER CORRUPTION LIST (block media recovery from the level 0/1 backups + archived logs)
+
+Recovery Manager: Release 23.26.1.0.0 - Production on Sat Nov 7 06:03:19 2026
+Version 23.26.1.0.0
+
+Copyright (c) 1982, 2026, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORCL3 (DBID=1178619591)
+
+RMAN> recover corruption list;
+Starting recover at 07-NOV-26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=312 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=70 device type=DISK
+searching flashback logs for block images until SCN 45393867
+finished flashback log search, restored 0 blocks
+
+channel ORA_DISK_1: restoring block(s)
+channel ORA_DISK_1: specifying block(s) to restore from backup set
+restoring blocks of datafile 00026
+channel ORA_DISK_1: reading from backup piece /u02/backup/orcl3/ORCL3_20261107_gac9b4ss_522_1_1
+channel ORA_DISK_1: piece handle=/u02/backup/orcl3/ORCL3_20261107_gac9b4ss_522_1_1 tag=L0
+channel ORA_DISK_1: restored block(s) from backup piece 1
+channel ORA_DISK_1: block restore complete, elapsed time: 00:00:07
+
+starting media recovery
+
+archived log for thread 1 with sequence 701 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_701_ogwcbbfz_.arc
+archived log for thread 1 with sequence 702 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_702_ogwdg50w_.arc
+archived log for thread 1 with sequence 703 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_703_ogwg6c43_.arc
+archived log for thread 1 with sequence 704 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_704_ogwhyknt_.arc
+archived log for thread 1 with sequence 705 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_705_ogwkpw8z_.arc
+archived log for thread 1 with sequence 706 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_706_ogwmh3r9_.arc
+archived log for thread 1 with sequence 707 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_707_ogwo7cts_.arc
+archived log for thread 1 with sequence 708 is already on disk as file /u02/oradata/FRA/ORCL3/archivelog/2026_11_07/o1_mf_1_708_ogwpzrwo_.arc
+recovery status time_needed 2026-11-07 02:40:28
+recovery status time_needed 2026-11-07 02:40:58
+recovery status time_needed 2026-11-07 03:00:04
+media recovery complete, elapsed time: 00:00:02
+Finished recover at 07-NOV-26
+
+
+RMAN> 
+
+Recovery Manager complete.
+06:03:38 verify: PASS (5 tables, counts and checksums match)
+06:03:38 RTO 26 s (block media recovery, PDB stayed open)
