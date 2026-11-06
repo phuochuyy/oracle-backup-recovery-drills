@@ -4,7 +4,8 @@
 # Hosts that are off are skipped — run it again for them (prm2, stb2, stb3) when they are up.
 set -u
 d=$(cd "$(dirname "$0")/.." && pwd)
-for h in ${@:-prm1 stb1 prm3}; do
+[ $# -gt 0 ] || set -- prm1 stb1 prm3
+for h in "$@"; do
   ssh -o BatchMode=yes -o ConnectTimeout=5 root@$h true 2>/dev/null || { echo "$h: not reachable, skipped"; continue; }
   ssh root@$h "mkdir -p /home/oracle/brlab/04-scripts /home/oracle/brlab/01-strategy && chown -R oracle:oinstall /home/oracle/brlab"
   scp -q "$d/04-scripts/check_backup_health.sh" "$d/04-scripts/scheduled_check.sh" oracle@$h:brlab/04-scripts/

@@ -225,3 +225,11 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   backups: more than this lab's disk can hold. With approval, one `DELETE OBSOLETE RECOVERY WINDOW OF 3 DAYS` on orcl3 (5.9 GB expected, host 4.9 to 10.9 GB); the configured window stays 7 days. On a real system
   shortening a recovery window is the data owner's decision, not a disk fix.
 
+## RAC backup on the standby, run 6
+
+- **`CONFIGURE ... FOR DB_UNIQUE_NAME orcl_stb` did not take for encryption.** It printed success, but the catalog held the setting for `ORCL` only and `SHOW` on the standby said OFF. I only noticed because I checked `V$BACKUP_PIECE_DETAILS`: 16 of 19 pieces unencrypted. The 3 marked encrypted were the TDE tablespaces. Fixed by configuring it connected to each site. Lesson: check the backup, not the command.
+- The job failed the first level 0 on `ORA-20079`. RMAN had hit it, resynced from the primary by itself and finished, so that was a false alarm from my own `grep`. The job now asks the catalog whether the last piece is recorded, and resyncs at the end.
+- With prm1 as standby the same job ran on prm1 and its pieces went into `+FRA`: the catalog sets a disk format for `orcl_stb` only. Works, but uses the recovery area. Not changed.
+- `systemctl stop` of the timers for a test does not survive a reboot: prm1 ran its level 1 during the failover test.
+- Deleted with approval: the unencrypted level 0 and what is obsolete for a 3-day window. Restore validate passed again afterwards ([evidence](../01-strategy/results/r6-rac-encrypted-20261107.txt)).
+

@@ -54,4 +54,4 @@ $P ". ~/.bash_profile >/dev/null 2>&1; echo 'alter pluggable database drillpdb o
 t1=$(ts)
 v=$($P "cd ~/brlab; BANKDB_DIR=~/bankdb ./04-scripts/verify_drillpdb.sh")
 say "verify: $v"
-say "RTO $(printf '%.0f' $(echo "$t1 - $t0" | bc)) s (method $method)"
+say "RTO $(printf '%.0f' "$(echo "$t1 - $t0" | bc)") s (method $method)"

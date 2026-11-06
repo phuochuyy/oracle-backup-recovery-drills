@@ -31,7 +31,7 @@ printf "alter session set container=DRILLPDB;\nset timing on\ninsert /*+ append 
 t1=$(ts)
 v=$($P "cd ~/brlab; BANKDB_DIR=~/perflab/01-setup/bankdb ./04-scripts/verify_drillpdb.sh")
 say "verify: $v"
-say "RTO $(printf '%.0f' $(echo "$t1 - $t0" | bc)) s (RECOVER TABLE + copy back)"
+say "RTO $(printf '%.0f' "$(echo "$t1 - $t0" | bc)") s (RECOVER TABLE + copy back)"
 $P "du -sh /u02/backup/aux 2>/dev/null; ls /u02/backup/aux | head"
 # the auxiliary instance's files stay behind (1.6 GB) and its datafiles were written into the VM disk:
 # on 2026-10-29 the host disk went from 9.9 to 3.5 GB free. Remove them and give the space back (discard).

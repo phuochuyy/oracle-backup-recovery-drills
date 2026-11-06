@@ -1,0 +1,33 @@
+# RAC backup on the standby after two failovers: first attempt failed, second proved (run 6)
+
+## First level 0, job rc=1
+283:ORA-20079: full resync from primary database is not done
+285:starting resync from primary
+287:resync from primary complete
+(job reported: ORA-20079: backup NOT recorded in the catalog; elapsed 742 s)
+Two findings: 16 of 19 pieces of this run were unencrypted, because the encryption setting had not reached the standby; and the job failed on ORA-20079 although RMAN had resynced by itself and finished.
+
+## Encryption setting in the catalog, after configuring it connected to each site
+
+NAME			   VALUE      DB_UNIQUE_NA
+-------------------------- ---------- ------------
+ENCRYPTION ALGORITHM	   'AES256'   ORCL
+ENCRYPTION FOR DATABASE    ON	      ORCL
+ENCRYPTION ALGORITHM	   'AES256'   ORCL_STB
+ENCRYPTION FOR DATABASE    ON	      ORCL_STB
+
+## Second level 0
+stb1: orcl_stb standby 0 rc=0 elapsed 699 s, log /u02/backup/logs/rac_L0_20261107_052510.log
+
+TAG	   ENC		N	  MB FIRST LAST_
+---------- --- ---------- ---------- ----- -----
+STB_L0	   YES	       10	1615 05:30 05:31
+
+## rac_backup_job.sh validate, after deleting the unencrypted level 0 and everything obsolete for a 3-day window
+stb1: orcl_stb standby validate rc=0 elapsed 155 s, log /u02/backup/logs/rac_Lvalidate_20261107_055552.log
+Finished restore at 07-NOV-26
+pieces read, by date in their name:
+      2 20261101
+     10 20261107
+
+Two pieces of 2026-11-01 are still needed and were read: an unchanged read-only datafile skipped by backup optimization, so old unencrypted pieces can remain until a backup with FORCE.

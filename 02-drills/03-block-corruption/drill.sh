@@ -39,4 +39,4 @@ t1=$(ts)
 printf "select count(*) still_corrupt from v\$database_block_corruption;\nexit\n" | sql | grep -E "^ +[0-9]+$" | tee -a "$out" || true
 v=$($P "cd ~/brlab; BANKDB_DIR=~/perflab/01-setup/bankdb ./04-scripts/verify_drillpdb.sh")
 say "verify: $v"
-say "RTO $(printf '%.0f' $(echo "$t1 - $t0" | bc)) s (block media recovery, PDB stayed open)"
+say "RTO $(printf '%.0f' "$(echo "$t1 - $t0" | bc)") s (block media recovery, PDB stayed open)"
