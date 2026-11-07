@@ -251,3 +251,5 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - Other findings on stb3: `DRILLPDB.BANK_DATA` had a datafile under `$ORACLE_HOME/dbs`, because the standby had no
   `DB_CREATE_FILE_DEST` when the primary added it. Moved online; the parameter is set now. Old redo files that no control
   file named took 3.2 GB; the script lists them and leaves the deletion to a person.
+- **Flashback Database was off on stb3 for 3 days.** The first roll forward ran `alter database flashback off`, and nothing turned it on again. Data Guard said `SUCCESS`, and the broker only warned at the moment FSFO was enabled (`ORA-16827`), a line I had filtered out until the key rotation test printed it. stb3 was primary in the power-off test of the HA/DR repository without it: prm3 was the one reinstated, so it did not show. A failover away from stb3 would have needed a rebuild. It is on now, the script restores it, and health check 9 reports it.
+
