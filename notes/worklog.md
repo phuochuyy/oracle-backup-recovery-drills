@@ -233,3 +233,21 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - `systemctl stop` of the timers for a test does not survive a reboot: prm1 ran its level 1 during the failover test.
 - Deleted with approval: the unencrypted level 0 and what is obsolete for a 3-day window. Restore validate passed again afterwards ([evidence](../01-strategy/results/r6-rac-encrypted-20261107.txt)).
 
+## Roll forward of stb3, second time: the script had only worked by luck
+
+- The broker restarted redo apply as soon as the standby mounted. RMAN had already replaced the control file, then
+  stopped with `ORA-01153: an incompatible media recovery is active`. The first run in this worklog got through because
+  apply was not started at that moment. The script now switches apply off through the broker, and stops if the broker
+  does not take it.
+- The restored control file names the standby redo logs after the primary's directory, which does not exist on stb3
+  (broker: `ORA-16789`), and RMAN leaves `STANDBY_FILE_MANAGEMENT` at `MANUAL`. The script now drops and adds those
+  groups, and sets `AUTO` again.
+- My first version of that fix made it worse: with `DB_CREATE_FILE_DEST` set as well as the FRA, OMF gave each group a
+  second member. Standby redo logs should not be multiplexed. The drop and add now run with that destination empty for
+  the session.
+- `OPEN READ ONLY` waits with no error while transport is off (`class slave wait`), because the standby needs redo from
+  the primary to reach a consistent point. I had put it in the script and it hung. It is now a separate step, `--open`,
+  to run once transport is on and the lag is 0.
+- Other findings on stb3: `DRILLPDB.BANK_DATA` had a datafile under `$ORACLE_HOME/dbs`, because the standby had no
+  `DB_CREATE_FILE_DEST` when the primary added it. Moved online; the parameter is set now. Old redo files that no control
+  file named took 3.2 GB; the script lists them and leaves the deletion to a person.
