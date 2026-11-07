@@ -27,7 +27,9 @@ done
 [ "${om:-}" = "READ WRITE" ] || { echo "database not open after 15 min (open_mode=${om:-none}), backup not run"; exit 1; }
 start=$(date +%s)
 rc=0
-rman target / log="$log" <<RMAN || rc=$?
+# C##BKADMIN with SYSBACKUP through the wallet in ~/rman_tns (install_bk_wallet.sh): no SYS, and no access to application data
+TNS_ADMIN=$HOME/rman_tns rman log="$log" <<RMAN || rc=$?
+connect target "/@orcl3_bk as sysbackup"
 $cmd
 delete noprompt obsolete;
 RMAN

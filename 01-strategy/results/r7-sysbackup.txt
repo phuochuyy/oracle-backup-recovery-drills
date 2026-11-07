@@ -1,0 +1,25 @@
+# SYSBACKUP cannot read application data (select from BANK.CARDS in PERF, connected through the wallet as sysbackup)
+ORA-41900: missing READ privilege on "BANK"."CARDS"
+
+# level 0 as C##BKADMIN: mode 0 rc=0 elapsed 119 s (backup_0_20261107_194216.log on prm3); host disk free 11053M to 8731M
+
+# validate as C##BKADMIN
+latest level 0 started 2026-11-07 19:43:57
+Finished restore at 07-NOV-26
+Finished restore at 07-NOV-26
+validate elapsed 138 s
+
+# who ran RMAN, from the unified audit trail
+
+AUDIT_TYPE							 DBUSERNAME	SYSTEM_PRIVILE RMAN_OPERATION		       C
+---------------------------------------------------------------- -------------- -------------- ---------------------- ----------
+RMAN_AUDIT							 C##BKADMIN		       Backup			       2
+RMAN_AUDIT							 C##BKADMIN		       Delete Obsolete		       1
+RMAN_AUDIT							 C##BKADMIN		       Restore Validate 	       2
+RMAN_AUDIT							 SYS			       Backup			       4
+RMAN_AUDIT							 SYS			       Delete			      12
+RMAN_AUDIT							 SYS			       Delete Obsolete		       4
+Standard							 C##BKADMIN	SYSBACKUP				      62
+Standard							 C##BKADMIN	SYSBACKUP, ALT				       2
+										ER SYSTEM
+

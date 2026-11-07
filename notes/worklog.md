@@ -253,3 +253,10 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
   file named took 3.2 GB; the script lists them and leaves the deletion to a person.
 - **Flashback Database was off on stb3 for 3 days.** The first roll forward ran `alter database flashback off`, and nothing turned it on again. Data Guard said `SUCCESS`, and the broker only warned at the moment FSFO was enabled (`ORA-16827`), a line I had filtered out until the key rotation test printed it. stb3 was primary in the power-off test of the HA/DR repository without it: prm3 was the one reinstated, so it did not show. A failover away from stb3 would have needed a rebuild. It is on now, the script restores it, and health check 9 reports it.
 
+## RMAN as C##BKADMIN with SYSBACKUP (orcl3)
+
+- `backup.sh` and `validate.sh` connect through a wallet ([`install_bk_wallet.sh`](../01-strategy/install_bk_wallet.sh)) instead of `target /`. Level 0 as the new account rc=0 in 119 s, encrypted as before; validate 138 s; `SELECT` on `BANK.CARDS` as SYSBACKUP gives `ORA-41900` ([evidence](../01-strategy/results/r7-sysbackup.txt)).
+- Copied the two scripts by hand: `install_timers.sh` would have re-enabled the level 0 timer.
+- My `tee` pointed at a directory that does not exist, so the wrapper reported a failure on a backup that had succeeded. I read the log before believing either.
+- Still OS authentication: archived log housekeeping (`arch-housekeeping.sh`), and the RAC jobs until they are moved in the same way.
+
