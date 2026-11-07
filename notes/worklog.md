@@ -260,3 +260,10 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - My `tee` pointed at a directory that does not exist, so the wrapper reported a failure on a backup that had succeeded. I read the log before believing either.
 - Still OS authentication: archived log housekeeping (`arch-housekeeping.sh`), and the RAC jobs until they are moved in the same way.
 
+## The standby's recovery area filled up, and Region B lost its protection
+
+- 2026-11-08, about 04:20: redo transport to stb3 failed with `ORA-16086` (no standby redo log available), FSFO `UNSYNCHRONIZED`: no automatic failover was possible. The standby's FRA was at 10,058 of 10,240 MB, 6.4 GB of it archived logs, every one already applied.
+- **Cause:** the deletion policy `APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO DISK` is right for the primary, which takes the backups. The roll forward copied the primary's control file to stb3, and RMAN settings live in the control file. On stb3 the policy waited for a backup that the standby never sees, so the housekeeping job deleted nothing (`RMAN-08138` every 10 minutes for hours) while the FRA filled. The memory tests of that night added the redo that tipped it over.
+- **Fix, with the user's approval:** stb3's own policy `APPLIED ON ALL STANDBY`; the next housekeeping run deleted the applied logs (FRA 3,621 MB), Data Guard `SUCCESS` within a minute. The roll forward script now sets it, because the next roll forward would bring the primary's policy back.
+- What should have caught it: the health check reports FRA usage, and the housekeeping log said `deleted=0` every time. Nobody was reading either. The roll forward run was mine and I did not check RMAN settings after it.
+

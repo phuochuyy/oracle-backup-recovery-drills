@@ -88,6 +88,9 @@ q "select member from v\$logfile where type = 'ONLINE';" | while read -r m; do m
 # RMAN switched Flashback Database off for this: a site without it cannot be reinstated after a failover (health check 9)
 printf 'alter system set standby_file_management = AUTO scope = both;\nalter database flashback on;\nexit\n' | sqlplus -s / as sysdba | grep -E 'ORA-'
 dgmgrl -silent / "edit database '$uname' set state='APPLY-ON'" | grep -v '^$' | grep -v '^Connected'
+# RMAN settings live in the control file, and this one came from the primary: its deletion policy wants a backup the
+# standby never sees ("BACKED UP 1 TIMES"), so no applied log was ever deleted here and the FRA filled (ORA-16086)
+printf 'configure archivelog deletion policy to applied on all standby;\nexit\n' | rman target / | grep -E 'RMAN-|ORA-|DELETION POLICY'
 q "select member from v\$logfile;" > /tmp/roll_forward_logs.txt
 for d in $(q "select value from v\$parameter where name in ('db_recovery_file_dest', 'db_create_file_dest');"); do
   for f in "$d/$uname/onlinelog"/*; do
