@@ -267,3 +267,8 @@ What I did, what went wrong, how I fixed it. Newest at the bottom.
 - **Fix, with the user's approval:** stb3's own policy `APPLIED ON ALL STANDBY`; the next housekeeping run deleted the applied logs (FRA 3,621 MB), Data Guard `SUCCESS` within a minute. The roll forward script now sets it, because the next roll forward would bring the primary's policy back.
 - What should have caught it: the health check reports FRA usage, and the housekeeping log said `deleted=0` every time. Nobody was reading either. The roll forward run was mine and I did not check RMAN settings after it.
 
+## RAC backups as C##BKADMIN too
+
+- `install_rac_backup.sh` now puts C##BKADMIN in the wallet for `orcl` and `orcl_stb`, and the job connects `as sysbackup`. The grant reached the standby's password file through redo. Validate rc=0 in 161 s, level 1 rc=0 in 586 s, both on stb1 ([evidence](../01-strategy/results/r7-sysbackup.txt)).
+- **My mistake:** I reinstalled the wallet while the catch-up level 1 of the old job was running. Its next channel connected through the new wallet without `as sysbackup` and failed with `ORA-01031`; the job reported the failure. I re-ran it with the new job. A credential change is done when no job is using it, as the password rotation procedure says.
+

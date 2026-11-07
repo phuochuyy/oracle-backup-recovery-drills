@@ -44,12 +44,12 @@ start=$(date +%s); rc=0
 # Two RMAN sessions: RMAN refuses a second CONNECT TARGET in one session (RMAN-06167) and goes on with the first
 # target — the first version of this job backed up the PRIMARY that way (2026-11-04 02:53, 2.9 GB into its FRA).
 rman log="$rlog" <<RMAN || { echo "$me: RESYNC CATALOG from the primary $prim failed, backup NOT run (log $rlog)"; exit 1; }
-connect target /@$prim
+connect target "/@$prim as sysbackup"
 connect catalog /@rcat_lab
 resync catalog;
 RMAN
 rman log="$log" <<RMAN || rc=$?
-connect target /@$dbu
+connect target "/@$dbu as sysbackup"
 connect catalog /@rcat_lab
 $cmd
 resync catalog;

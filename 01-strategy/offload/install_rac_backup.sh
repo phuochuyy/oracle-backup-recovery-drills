@@ -2,14 +2,17 @@
 # Install the scheduled RAC backup on RAC nodes (run again on a node that was off; idempotent).
 # usage (from the host): ./install_rac_backup.sh prm1 stb1 [prm2 stb2]
 # On each node, as oracle: ~/rman_tns = own TNS_ADMIN (copy of the database home's tnsnames.ora + alias rcat_lab,
-# sqlnet.ora pointing to the wallet) and an auto-login wallet with SYS for orcl / orcl_stb and RCO for the catalog.
+# sqlnet.ora pointing to the wallet) and an auto-login wallet with C##BKADMIN (SYSBACKUP) for orcl / orcl_stb and RCO
+# for the catalog: the job never logs in as SYS.
 # The wallet password is random, generated here, used once and never stored: to change a credential the wallet
-# is simply created again. DB_PASSWORD / RCO_PASSWORD come from ../../lab.env and travel over ssh stdin only.
+# is simply created again. RCO_PASSWORD comes from ../../lab.env, BKADMIN_PASSWORD_A from the security repository's lab.env
+# (03-hardening/07_admin_roles.sh creates the account); both travel over ssh stdin only.
 # Then: rac_backup_job.sh -> /u02/backup/bin, systemd units -> enable rac-backup-0/1.timer, and a check that every
 # alias logs in through the wallet (no password typed).
 set -eu
 H=$(cd "$(dirname "$0")/../.." && pwd); D=$(cd "$(dirname "$0")" && pwd)
-. "$H/lab.env"; : "${DB_PASSWORD:?}" "${RCO_PASSWORD:?}"
+. "$H/lab.env"; : "${RCO_PASSWORD:?}"
+. "$H/../oracle-security-compliance-lab/lab.env"; : "${BKADMIN_PASSWORD_A:?run 03-hardening/07_admin_roles.sh prm1 A first}"
 [ $# -gt 0 ] || { echo "usage: $0 <node>..."; exit 2; }
 for n in "$@"; do
   echo "== $n"
@@ -31,7 +34,7 @@ mkdir -m 700 "$T/wallet"
 EOF
   printf '%s\n%s\n' "$wpw" "$wpw" | ssh -o BatchMode=yes oracle@$n \
     '. ~/.bash_profile >/dev/null 2>&1; mkstore -wrl ~/rman_tns/wallet -create >/dev/null'
-  for c in "orcl sys $DB_PASSWORD" "orcl_stb sys $DB_PASSWORD" "rcat_lab rco $RCO_PASSWORD"; do
+  for c in "orcl c##bkadmin $BKADMIN_PASSWORD_A" "orcl_stb c##bkadmin $BKADMIN_PASSWORD_A" "rcat_lab rco $RCO_PASSWORD"; do
     read -r alias user pw <<< "$c"
     printf '%s\n%s\n%s\n' "$pw" "$pw" "$wpw" | ssh -o BatchMode=yes oracle@$n \
       ". ~/.bash_profile >/dev/null 2>&1; mkstore -wrl ~/rman_tns/wallet -createCredential $alias $user >/dev/null"
@@ -47,8 +50,8 @@ EOF
   ssh -o BatchMode=yes oracle@$n 'bash -s' <<'EOF'
 . ~/.bash_profile >/dev/null 2>&1; export TNS_ADMIN=$HOME/rman_tns
 for a in orcl orcl_stb; do
-  r=$(printf 'set heading off feedback off pages 0\nselect db_unique_name || chr(32) || database_role from v$database;\n' | sqlplus -s -L /@$a as sysdba 2>&1 | grep -vE '^$' | head -n 1)
-  echo "   wallet login /@$a as sysdba: $r"
+  r=$(printf 'set heading off feedback off pages 0\nselect db_unique_name || chr(32) || database_role from v$database;\n' | sqlplus -s -L "/@$a as sysbackup" 2>&1 | grep -vE '^$' | head -n 1)
+  echo "   wallet login /@$a as sysbackup: $r"
 done
 r=$(printf "set heading off feedback off pages 0\nselect sys_context('userenv', 'session_user') from dual;\n" | sqlplus -s -L /@rcat_lab 2>&1 | grep -vE '^$' | head -n 1)
 echo "   wallet login /@rcat_lab: $r"
