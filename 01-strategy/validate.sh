@@ -9,7 +9,8 @@ l0=$(printf "set heading off feedback off pages 0\nselect to_char(max(start_time
 [ -n "$l0" ] || { echo "no level 0 backup found"; exit 1; }
 echo "latest level 0 started $l0"
 start=$(date +%s)
-rman target / <<RMAN | grep -E "Finished restore|RMAN-|ORA-" | grep -vE "RMAN-08120|RMAN-08137"
+TNS_ADMIN=$HOME/rman_tns rman <<RMAN | grep -E "Finished restore|RMAN-|ORA-" | grep -vE "RMAN-08120|RMAN-08137"
+connect target "/@orcl3_bk as sysbackup"
 restore database validate;
 restore archivelog from time "to_date('$l0', 'YYYY-MM-DD HH24:MI:SS')" validate;
 RMAN
