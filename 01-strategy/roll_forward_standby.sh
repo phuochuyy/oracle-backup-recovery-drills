@@ -85,7 +85,8 @@ q "select s.group# || ' ' || s.bytes || ' ' || f.member from v\$standby_log s jo
       echo "standby log group $g recreated: $(q "select count(*) from v\$standby_log where group# = $g;" | head -n 1) of 1"
     done
 q "select member from v\$logfile where type = 'ONLINE';" | while read -r m; do mkdir -p "$(dirname "$m")"; done
-printf 'alter system set standby_file_management = AUTO scope = both;\nexit\n' | sqlplus -s / as sysdba | grep -E 'ORA-'
+# RMAN switched Flashback Database off for this: a site without it cannot be reinstated after a failover (health check 9)
+printf 'alter system set standby_file_management = AUTO scope = both;\nalter database flashback on;\nexit\n' | sqlplus -s / as sysdba | grep -E 'ORA-'
 dgmgrl -silent / "edit database '$uname' set state='APPLY-ON'" | grep -v '^$' | grep -v '^Connected'
 q "select member from v\$logfile;" > /tmp/roll_forward_logs.txt
 for d in $(q "select value from v\$parameter where name in ('db_recovery_file_dest', 'db_create_file_dest');"); do

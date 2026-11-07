@@ -166,4 +166,14 @@ if [ "$role" = PRIMARY ]; then
   esac
 fi
 
+# 9. Flashback Database, on either role, while Fast-Start Failover is on. Reinstating a failed primary needs it. RMAN turned it
+#    off on stb3 during a roll forward (RECOVER STANDBY DATABASE FROM SERVICE) and it stayed off for 3 days: Data Guard said
+#    SUCCESS, and a failover away from stb3 could not have reinstated it.
+read -r fs9 fb <<< "$(q "select replace(fs_failover_status, ' ', '_') || ' ' || flashback_on from v\$database;" | head -n 1)"
+case $fs9 in
+  DISABLED|"") ;;
+  *) [ "$fb" = YES ] && line OK "flashback" "on, this site can be reinstated after a failover" \
+                     || line CRIT "flashback" "$fb with FSFO on: after a failover this site cannot be reinstated, it must be rebuilt" ;;
+esac
+
 exit $crit
