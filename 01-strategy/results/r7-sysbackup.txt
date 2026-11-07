@@ -23,3 +23,18 @@ Standard							 C##BKADMIN	SYSBACKUP				      62
 Standard							 C##BKADMIN	SYSBACKUP, ALT				       2
 										ER SYSTEM
 
+
+# Region A, RAC offload on stb1 as C##BKADMIN (wallet ~/rman_tns, connect "/@<db> as sysbackup")
+validate (timer 05:30): rc=0 elapsed 161 s
+stb1: orcl_stb standby 1 rc=0 elapsed 586 s, log /u02/backup/logs/rac_L1_20261108_053359.log
+# standby audit trail (Active Data Guard writes it to OS files), last 30 minutes, RMAN and C##BKADMIN
+
+DBUSERNAME     SYSTEM_PRIVI RMAN_OPERATION		  C
+-------------- ------------ -------------------- ----------
+C##BKADMIN     (null)	    Backup			  2
+C##BKADMIN     (null)	    Restore Validate		  1
+C##BKADMIN     (null)	    resync			  4
+C##BKADMIN     SYSBACKUP    (null)			 98
+C##BKADMIN     SYSBACKUP, A (null)			  4
+C##BKADMIN     (null)	    (null)			  1
+SYS	       (null)	    resync			  1
