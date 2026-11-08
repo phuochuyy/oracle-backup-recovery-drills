@@ -189,7 +189,7 @@ the script now sets `LC_ALL=C`. No mail server in the lab: alerts are read with 
 
 First run of the validate service (by hand, 2026-10-30 00:22): **OK in 202 s** — the level 0 of 10-28 02:00, the level 1s and every archived log since read and checked block by block, nothing restored.
 
-The RAC is not validated on a schedule yet: its backups (on the standby) are still started by hand.
+The RAC's backups are validated on a schedule too: `rac-backup-validate.timer` on the standby nodes, Sundays 05:30, as `C##BKADMIN` ([job](../01-strategy/offload/rac_backup_job.sh), [results](../01-strategy/results/r7-sysbackup.txt)).
 
 **Capacity (check 7, added 2026-11-02).** The VMs' disks are sparse images on a host with little free space.
 On 2026-11-02 the orcl3 standby, off for a while, pulled a ~3.7 GB redo gap in one go when transport was switched
